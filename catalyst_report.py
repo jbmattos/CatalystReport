@@ -26,9 +26,6 @@ from matplotlib.gridspec import SubplotSpec
 from matplotlib.pylab import rcParams
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-
-
-
 from catalyst_fund_eda import CatalystFundEDA
 from data.datasets import available_data
 

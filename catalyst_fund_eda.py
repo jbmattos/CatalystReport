@@ -26,12 +26,12 @@ from matplotlib.pylab import rcParams
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-from data.datasets import get_catalyst_data, available_data
+from catalyst_votingresults import CatalystVotingResults
 
 
 class CatalystFundEDA():
     def __init__(self, fund: str) -> None:
-        self.__catalyst_data = get_catalyst_data(fund)  # CatalystData
+        self.__catalyst_data = CatalystVotingResults(fund)  # CatalystData
         self.__default_score_feat = 'SCORE'
         self.__default_stats_feats = ['SCORE','YES','NO','Unique Yes','Unique No','Result','REQUESTED $','REQUESTED %']
         self.__palette_status = {"FUNDED": '#0570b0', # blue
