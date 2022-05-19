@@ -43,7 +43,8 @@ FUNDS_FILES = {
     "f7": PATH+"data_files/Fund7 Voting results.xlsx",
     "f8": PATH+"data_files/Fund8 Voting results.xlsx"
 }
-
+def available_data() -> dict:
+    return FUNDS_FILES
 
 ##################
 # MESSAGES       #
@@ -64,9 +65,7 @@ class CatalystData():
         self.results = None
         self.validation = None
         self.withdrawals = None
-        self._validation_cols = VALIDATION_COLS
         self._defaults_cols = DEFAULT_COLS
-        self._int_cols = INT_COLS
         self.__read_file(file_path)
         
     def __read_file(self, file_path: str):
@@ -311,6 +310,9 @@ def __default_setup_validation(data: CatalystData, df:pd.DataFrame) -> CatalystD
 # def __input_budget_fN(data: dict) -> dict:
 #     # In case of between the challenge's names in CatalystData.data.keys() and CatalystData.validation.columns
 #     # Provide a dictionary {CatalystData.data name : CatalystData.validation name}
+#     
+#     # In case of missing challenge budget, the value can be found on Catalyst website https://cardanocataly.st/voter-tool/#/
+#     # Provide a dictionary {CatalystData.data name : budget (int)}
 #
 # return __default_input_budget(data, fund='fN', replace_validation=replace_dict)
 # ----------------------------------------
@@ -354,7 +356,6 @@ def __input_budget_f6(data: CatalystData) -> CatalystData:
 def __input_budget_f7(data: CatalystData) -> CatalystData:
     replace_dict = {
         'A.I. & SingularityNet a $5T mar': 'A.I. & SingularityNet a $5T market',
-        # 'Accelerate Decentralized Identi': '',
         'Boosting Cardanos DeFi': "Boosting Cardano's DeFi",
         'Catalyst - Rapid Funding Mechan': "Catalyst - Rapid Funding Mechanisms",
         'Catalyst Natives COTI Pay with ': 'Catalyst Natives COTI: Pay with ADA Plug-in',
@@ -370,7 +371,10 @@ def __input_budget_f7(data: CatalystData) -> CatalystData:
         'Fund8 challenge setting': 'Fund8 Challenge Setting',
         'Sponsored by leftovers': 'Sum of the leftovers'
     }
-    return __default_input_budget(data, replace_validation=replace_dict)
+    input_bud = {
+        'Accelerate Decentralized Identi': 425000,
+    }
+    return __default_input_budget(data, replace_validation=replace_dict, input_bud=input_bud)
 
 def __input_budget_f8(data: CatalystData) -> CatalystData:
     replace_dict = {
@@ -385,16 +389,19 @@ def __input_budget_f8(data: CatalystData) -> CatalystData:
     }
     return __default_input_budget(data, replace_validation=replace_dict)
 
-def __default_input_budget(data: CatalystData, replace_validation: dict={}) -> CatalystData:
+def __default_input_budget(data: CatalystData, replace_validation: dict={}, input_bud:dict={}) -> CatalystData:
     dfs = data.data
     for challenge in dfs.keys():
-        if challenge in replace_validation: ch = replace_validation[challenge]
-        else: ch = challenge
-        try:
-            bud = data.validation.loc[data.validation.challenge==ch]['budget'].item()
-        except:
-            warnings.warn(WAR_BUDGET_NOT_FOUND.format(data.fund, challenge))
-            bud = np.nan
+        if challenge in input_bud:
+            bud = input_bud[challenge]
+        else:
+            if challenge in replace_validation: ch = replace_validation[challenge]
+            else: ch = challenge
+            try:
+                bud = data.validation.loc[data.validation.challenge==ch]['budget'].item()
+            except:
+                warnings.warn(WAR_BUDGET_NOT_FOUND.format(data.fund, challenge))
+                bud = np.nan
         dfs[challenge]['challenge'] = challenge
         dfs[challenge]['Budget'] = bud
     return data 
@@ -408,7 +415,7 @@ def __default_input_budget(data: CatalystData, replace_validation: dict={}) -> C
 #
 #  TEMPLATE:
 #
-# DEFAULT_COLS = ['Proposal', 'SCORE', 'YES', 'NO', 'Unique Yes', 'Unique No', 'Result','STATUS','REQUESTED $', 'challenge', 'Budget']
+# DEFAULT_COLS = ['challenge', 'Budget', 'Proposal', 'SCORE', 'YES', 'NO', 'Unique Yes', 'Unique No', 'Result','STATUS','REQUESTED $', 'REQUESTED %']
 # def __process_f4(data: CatalystData) -> CatalystData:
 #   # In case a DEFAULT_COLS has a different name from the ones defined in the global variable
 #   #    provide a dictionary {old_name : default_name} for renaming the pd.DataFrame columns 
@@ -462,15 +469,22 @@ def __default_process(data: CatalystData, rename_default_cols:dict={}) -> Cataly
     for challenge, df in data.data.items():
         # rename columns 
         df.rename(columns=rename_default_cols, inplace=True)
-        # as type int
+        
+        # adjust type int
         df = __format_int(df)
-        # create missing DEFAULT column
+        
+        # format default features
         df['REQUESTED %'] = 100*df['REQUESTED $']/df['Budget']
+        df = __format_status(df)
 
         data.data[challenge] = df.copy()
-        to_concat.append(df[list(set(df.columns).intersection(DEFAULT_COLS))].copy())
+        default_cols = list(set(df.columns).intersection(DEFAULT_COLS))
+        to_concat.append(df[default_cols].copy())
     
+    # concatenate all challenges' default data 
     data.results = pd.concat(to_concat, axis='index')
+    data.results.reset_index(drop=True, inplace=True)
+
     # rearrange columns
     cols = [c for c in DEFAULT_COLS if c in data.results.columns]
     data.results = data.results[cols] 
@@ -479,6 +493,20 @@ def __default_process(data: CatalystData, rename_default_cols:dict={}) -> Cataly
 def __format_int(df: pd.DataFrame) -> pd.DataFrame:
     to_int = list(set(df.columns).intersection(INT_COLS))
     df[to_int] = df[to_int].astype(int)
+    return df
+
+def __format_status(df: pd.DataFrame) -> pd.DataFrame:
+    def napp_status_mat(df):
+        return (df['Meets approval threshold']=='NO')
+    def napp_status_yn(df):
+        return (df['YES'] < 1.15*df['NO'])
+
+    if 'Meets approval threshold' in df.columns:
+        df.loc[napp_status_mat(df),'STATUS'] = 'NOT APPROVED'
+    elif ('YES' in df.columns) and ('NO' in df.columns):
+        df.loc[napp_status_yn(df),'STATUS'] = 'NOT APPROVED'
+    else:
+        warnings.warn('Status NOT_APPROVED: Not enought data for defining such status. Kept original STATUS.')
     return df
 
 def __format_currency_cols(df: pd.DataFrame, cols_to_format=[]) -> pd.DataFrame:
