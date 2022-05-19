@@ -1,15 +1,23 @@
+'''
+DATA LOADERS FOR VOTING-RESULTS DATA
+
+This file provides fund-specific functions to properly load `datafiles_votingresults` data
+into `catalyst_votingresults.CatalystVotingResults` objects.
+
+For adding new Fund data to the repository, 
+follow the comments provided in this file
+to implement the necessary new-fund specific functions.
+'''
+
 import numpy as np
 import pandas as pd
 import os
 
 PATH = os.path.dirname(__file__)+'/datafiles_votingresults/'
 
-##################################################
-# MANUAL INPUT:  
-#     For new fundings, add the references bellow
-##################################################
-
-# ADD PATH TO NEW FUND'S FILES
+# ---------------------------------------------------------------
+# MANUAL INPUT: For new fundings, add the file reference bellow
+# ---------------------------------------------------------------
 FUNDS_FILES = {      
     "f3": PATH+"Fund3 Voting results.xlsx",
     "f4": PATH+"Fund4 Voting results.xlsx",
@@ -21,17 +29,15 @@ FUNDS_FILES = {
 def available_data() -> dict:
     return FUNDS_FILES
 
-#################################
-# FUND-SPECIFIC FUNCTIONS
-################################
 
-# ----------------------------------------
-# DF-VALIDATION FUNCTIONS
+##################################################
+# VALIDATION SETUP
 #
 # explanation
 #
 # TEMPLATE:
 #
+# ----------------------------------------
 # def validation_setup_fN(df:pd.DataFrame) -> pd.DataFrame:
 #     df = data.validation
 #
@@ -47,7 +53,8 @@ def available_data() -> dict:
 #     # (add optional code here)
 #
 #     return df.copy()
-# ----------------------------------------
+##################################################
+
 
 def validation_setup_f3(df:pd.DataFrame) -> pd.DataFrame:
     # Drop unecessary rows (NaN values will be handle by default)
@@ -95,14 +102,14 @@ def validation_setup_f8(df:pd.DataFrame) -> pd.DataFrame:
     return df.copy()
 
 # ----------------------------------------
-#    BUDGET EXTRACTION FUNCTIONS
+#    BUDGET SETUP
 #
 # explanation
 # return dict containing the parameters to default function
 #  TEMPLATE:
 #
 # def input_budget_fN() -> dict:
-#     # In case of between the challenge's names in CatalystData.data.keys() and CatalystData.validation.columns
+#     # In case of differences between the challenge's names in CatalystData.data.keys() and CatalystData.validation.columns
 #     # Provide a dictionary {CatalystData.data name : CatalystData.validation name}
 #     replace_validation = {}
 #
@@ -208,9 +215,10 @@ def get_budget_f8() -> dict:
 # ----------------------------------------
 
 def get_process_f3() -> dict:
-    return {}
+    rename = {}
+    return {'rename_default_cols':rename}
 
-def process_challenges_f4() -> dict:
+def get_process_f4() -> dict:
     # In case a DEFAULT_COLS has a different name from the ones defined in the global variable of fund_voting_results.py
     #    provide a dictionary {old_name : default_name} for renaming the pd.DataFrame columns 
     rename = {

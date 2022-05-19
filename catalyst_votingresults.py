@@ -1,55 +1,39 @@
 '''
 LOADING CATALYST FUND RESULTS DATA
 
-This file is dedicated to load the available CatalystReport data sets 
+This file is dedicated to load the available Catalyst Voting Results data sets 
 into properly adjusted data structure to data analysis.
-
-- The public functions output a processed CatalystData object.
-- The pipeline (protected) functions are mappers to fund-specific functions responsible for properly fomatting the data from different funds. 
-- The fund-specific functions implement fund-personalised processing and perform default setup functions
-- The __default functions modify and return processed CatalystData objects
-
-To add new Fund's Results, the following fund-specific functions should be provided:
-- __get_validation_fN
-- __input_budget_fN
-- __process_fN
-for N standing for the integer reference to the fund.
-Templates for the above fund-specific functions are provided throughout this file. 
-
-This files contains a collection of public and private functions
-    v.0 - which offer some functionality in loading the vCA's assessments databases.
 '''
+
 import numpy as np
 import pandas as pd
 import warnings
 
 from data.loaders_votingresults import *
 
-
 # MESSAGES      
-ERR_FNC_NOT_FOUND = "Error while loading {} results: {} processing.\nPlease, provide a proper < data.datasets.{}() > function for providing the expected results."
+ERR_FNC_NOT_FOUND = "Error while loading {} results: {} processing.\nPlease, provide a proper < data.loader_votingresults.{}() > function for loading the expected results."
 ERR_REF_NOT_FOUND = "Undefined Fund reference. Available fundings: {}.\n>> To add a new fund, please input the data file path on < data.datasets.FUNDS_FILES > and provide a proper loading function specified on < data.datasets.MAP_LOAD_FNC >."
-WAR_BUDGET_NOT_FOUND = '< {}-{} > Budget not found. Please, make sure the challenge name from Catalyst.data matches the challenge names in Catalyst.validation.'
-
-# GLOBAL VAR
-VALIDATION_COLS = ['challenge', 'budget']
-DEFAULT_COLS = ['challenge', 'Budget', 'Proposal', 'SCORE', 'YES', 'NO', 'Unique Yes', 'Unique No', 'Result','STATUS','REQUESTED $', 'REQUESTED %']
-INT_COLS = ['YES', 'NO', 'Unique Yes', 'Unique No', 'Result', 'REQUESTED $']
-FUNDS_FILES = available_data()
+WAR_BUDGET_NOT_FOUND = '< {}-{} > Budget not found. Please, make sure a proper < data.loader_votingresults.{}() > function is provided.'
 
 
 class CatalystVotingResults():
+
+    VALIDATION_COLS = ['challenge', 'budget']
+    DEFAULT_COLS = ['challenge', 'Budget', 'Proposal', 'SCORE', 'YES', 'NO', 'Unique Yes', 'Unique No', 'Result','STATUS','REQUESTED $', 'REQUESTED %']
+    INT_COLS = ['YES', 'NO', 'Unique Yes', 'Unique No', 'Result', 'REQUESTED $']
+    FUNDS_FILES = available_data()
+
     def __init__(self, fund:str) -> None:
-        if fund not in FUNDS_FILES.keys():
-            raise TypeError(ERR_REF_NOT_FOUND.format(list(FUNDS_FILES.keys())))
+        if fund not in CatalystVotingResults.FUNDS_FILES.keys():
+            raise TypeError(ERR_REF_NOT_FOUND.format(list(CatalystVotingResults.FUNDS_FILES.keys())))
         else: 
             self.fund = fund
-            self.path = FUNDS_FILES[fund]
+            self.path = CatalystVotingResults.FUNDS_FILES[fund]
             self.data = None
             self.results = None
             self.validation = None
             self.withdrawals = None
-            self._DEFAULT_COLS = DEFAULT_COLS
             self.__load_data()
             self.__pipeline()
         
@@ -122,12 +106,6 @@ class CatalystVotingResults():
         self.__challenge_data_processing()
         return 
 
-    #################################
-    # PIPELINE FUNCTIONS
-    #
-    # explanation
-    #################################
-
     def __validation_setup(self) -> None:
         '''
         This function generates a formatted Validation DataFrame
@@ -139,9 +117,9 @@ class CatalystVotingResults():
             try: 
                 df = globals()[func](self.validation)
             except: 
-                raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, '__validation_setup(data: CatalystData) -> CatalystData', func))
+                raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, 'self.__validation_setup()', func))
 
-            df.columns = VALIDATION_COLS
+            df.columns = CatalystVotingResults.VALIDATION_COLS
             df.dropna(subset=['challenge'],inplace=True)
             df.reset_index(drop=True, inplace=True)
             df['budget'] = df['budget'].astype(int)
@@ -159,7 +137,7 @@ class CatalystVotingResults():
         try: 
             params = globals()[func]()
         except: 
-            raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, '__input_budget(data: CatalystData) -> CatalystData', func))
+            raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, 'self.__budget_setup()', func))
         replace_validation = params['replace_validation']
         input_bud = params['input_bud']
 
@@ -173,7 +151,7 @@ class CatalystVotingResults():
                 try:
                     bud = self.validation.loc[self.validation.challenge==ch]['budget'].item()
                 except:
-                    warnings.warn(WAR_BUDGET_NOT_FOUND.format(self.fund, challenge))
+                    warnings.warn(WAR_BUDGET_NOT_FOUND.format(self.fund, challenge, func))
                     bud = np.nan
             dfs[challenge]['challenge'] = challenge
             dfs[challenge]['Budget'] = bud
@@ -190,7 +168,7 @@ class CatalystVotingResults():
         try: 
             params = globals()[func]()
         except: 
-            raise TypeError(ERR_FNC_NOT_FOUND.format(data.fund, '__challenge_data_processing(data: CatalystData) -> CatalystData', func))
+            raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, 'self.__challenge_data_processing()', func))
         rename_default_cols = params['rename_default_cols']
 
         to_concat = []
@@ -203,10 +181,10 @@ class CatalystVotingResults():
             
             # format default features
             df['REQUESTED %'] = 100*df['REQUESTED $']/df['Budget']
-            df = self.__format_status(df)
+            df = self.__format_status(df, challenge)
 
             self.data[challenge] = df.copy()
-            default_cols = list(set(df.columns).intersection(DEFAULT_COLS))
+            default_cols = list(set(df.columns).intersection(CatalystVotingResults.DEFAULT_COLS))
             to_concat.append(df[default_cols].copy())
         
         # concatenate all challenges' default data 
@@ -214,22 +192,20 @@ class CatalystVotingResults():
         self.results.reset_index(drop=True, inplace=True)
 
         # rearrange columns
-        cols = [c for c in DEFAULT_COLS if c in self.results.columns]
+        cols = [c for c in CatalystVotingResults.DEFAULT_COLS if c in self.results.columns]
         self.results = self.results[cols] 
         return
 
-    #################################
-    # PIPELINE FUNCTIONS
-    #
-    # explanation
-    #################################
+    #-------------------
+    # FORMAT FUNCTIONS
+    #-------------------
 
     def __format_int(self, df: pd.DataFrame) -> pd.DataFrame:
-        to_int = list(set(df.columns).intersection(INT_COLS))
+        to_int = list(set(df.columns).intersection(CatalystVotingResults.INT_COLS))
         df[to_int] = df[to_int].astype(int)
         return df
 
-    def __format_status(self, df: pd.DataFrame) -> pd.DataFrame:
+    def __format_status(self, df: pd.DataFrame, __challenge:str) -> pd.DataFrame:
         def napp_status_mat(df):
             return (df['Meets approval threshold']=='NO')
         def napp_status_yn(df):
@@ -240,7 +216,10 @@ class CatalystVotingResults():
         elif ('YES' in df.columns) and ('NO' in df.columns):
             df.loc[napp_status_yn(df),'STATUS'] = 'NOT APPROVED'
         else:
-            warnings.warn('Status NOT_APPROVED: Not enought data for defining such status. Kept original STATUS.')
+            warnings.warn('{} Challenge {}: Status NOT_APPROVED - \
+                          Not enought data for defining such status. Kept original STATUS={}.'.format(self.fund,
+                                                                                                    __challenge, 
+                                                                                                    list(df.STATUS.unique())))
         return df
 
     def __format_currency_cols(self, df: pd.DataFrame, cols_to_format=[]) -> pd.DataFrame:
