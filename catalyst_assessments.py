@@ -12,13 +12,12 @@ import warnings
 from data.loaders_assessments import *
 
 # MESSAGES      
-ERR_FNC_NOT_FOUND = "Error while loading {} results: {} processing.\nPlease, provide a proper < data.loader_votingresults.{}() > function for loading the expected results."
+ERR_FNC_NOT_FOUND = "Error while loading {} results: {} processing.\nPlease, provide a proper < data.loaders_assessments.{}() > function for loading the expected results."
 ERR_REF_NOT_FOUND = "Undefined Fund reference. Available fundings: {}.\n>> To add a new fund, please input the data file path on < data.datasets.FUNDS_FILES > and provide a proper loading function specified on < data.datasets.MAP_LOAD_FNC >."
 
 class CatalystAssessments():
 
     FUNDS_FILES = available_data()
-    DEFAULT_TXT_FEAT = ['Impact / Alignment Note', 'Feasibility Note', 'Auditability Note']
 
     def __init__(self, fund:str) -> None:
         if fund not in CatalystAssessments.FUNDS_FILES.keys():
@@ -38,7 +37,7 @@ class CatalystAssessments():
     
     @property
     def assessments(self) -> pd.DataFrame:
-        return self.__df[~self.__is_default_filteredout]
+        return self.data['assessments']
 
     def get_filtered_out(self, type: str='all') -> pd.DataFrame:
         '''
@@ -75,8 +74,8 @@ class CatalystAssessments():
             raise TypeError('File extension not supported. Supported < CatalystData.__read_file() > extensions: {}'.format(__supp_ext))
         
         data = {}
-        # data['assessments'] = self.__get_assessments(xlsx_obj)
-        data['CAs'] = self.__get_comunity_advisors(xlsx_obj)
+        data['assessments'] = self.__get_assessments(xlsx_obj)
+        # data['CAs'] = self.__get_comunity_advisors(xlsx_obj)
         # data['vCAs'] = self.__get_veteran_comunity_advisors(xlsx_obj)
 
 
@@ -128,15 +127,9 @@ class CatalystAssessments():
         '''
         func = 'get_assessments_{}'.format(self.fund)
         try: 
-            params = globals()[func]()
+            return globals()[func](xlsx_obj=xlsx_obj)
         except: 
             raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, 'self.__get_assessments()', func))
-        
-        data = xlsx_obj.parse(sheet_name=params['sheet'])
-
-        if 'x2bool_feat' in params:
-            data[params['x2bool_feat']] = data[params['x2bool_feat']].replace({'[xX]':True, np.nan: False}, regex=True)
-        return data
 
     def __pipeline(self) -> None:
         '''

@@ -14,7 +14,7 @@ from data.loaders_votingresults import *
 # MESSAGES      
 ERR_FNC_NOT_FOUND = "Error while loading {} results: {} processing.\nPlease, provide a proper < data.loader_votingresults.{}() > function for loading the expected results."
 ERR_REF_NOT_FOUND = "Undefined Fund reference. Available fundings: {}.\n>> To add a new fund, please input the data file path on < data.datasets.FUNDS_FILES > and provide a proper loading function specified on < data.datasets.MAP_LOAD_FNC >."
-WAR_BUDGET_NOT_FOUND = '< {}-{} > Budget not found. Please, make sure a proper < data.loader_votingresults.{}() > function is provided.'
+WAR_BUDGET_NOT_FOUND = '< {}-{} > Budget not found. Please, make sure a proper < data.loaders_votingresults.{}() > function is provided.'
 
 
 class CatalystVotingResults():
