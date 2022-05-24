@@ -59,7 +59,7 @@ class CatalystFundEDA():
     def budgets(self) -> pd.Series:
         return self.__catalyst_results.validation.set_index(CatalystVotingResults.VALIDATION_COLS[0]) 
     @property
-    def __stats_feats(self) -> list:
+    def stats_feats(self) -> list:
         return list(set(self.__default_stats_feats).intersection(set(self.results.columns)))
 
     def get_challenge_results(self, challenge:str) -> pd.DataFrame:
@@ -75,7 +75,7 @@ class CatalystFundEDA():
         return
     
     def get_statistics(self, feats:list=[], metrics:list=[]) -> pd.DataFrame:
-        if not feats: feats = self.__stats_feats
+        if not feats: feats = self.stats_feats
         df_stats = self.__get_stats(feats)
 
         if metrics:
@@ -85,25 +85,25 @@ class CatalystFundEDA():
         else: return df_stats
 
     def plot_distribution(self, feat:str='SCORE') -> None:
-        if feat in self.__stats_feats:
+        if feat in self.stats_feats:
             self.__plot_dist(feat)
         else: 
-            raise TypeError(ERR_STATS_FEAT.format(feat, self.__stats_feats))
+            raise TypeError(ERR_STATS_FEAT.format(feat, self.stats_feats))
         return
     
 
     def plot_swarm(self, feat:str='SCORE') -> None:
-        if feat in self.__stats_feats:
+        if feat in self.stats_feats:
             self.__plot_swarm(feat)
         else: 
-            raise TypeError(ERR_STATS_FEAT.format(feat, self.__stats_feats))
+            raise TypeError(ERR_STATS_FEAT.format(feat, self.stats_feats))
         return
 
     def plot_lm(self, x_feat:str, y_feat:str, fit_reg:bool=False) -> None:
-        if (x_feat in self.__stats_feats) and (y_feat in self.__stats_feats):
+        if (x_feat in self.stats_feats) and (y_feat in self.stats_feats):
             self.__plot_lm(x_feat, y_feat, fit_reg)
         else: 
-            raise TypeError(ERR_STATS_FEAT.format((x_feat, y_feat), self.__stats_feats))
+            raise TypeError(ERR_STATS_FEAT.format((x_feat, y_feat), self.stats_feats))
         return
     
     def plot_budget_availability(self) -> None:

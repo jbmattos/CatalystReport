@@ -36,7 +36,14 @@ class CatalystVotingResults():
             self.withdrawals = None
             self.__load_data()
             self.__pipeline()
-        
+    
+    @property
+    def challenges(self) -> list:
+        return list(self.data.keys())
+    
+    def get_challenge_results(self, challenge:str) -> pd.DataFrame:
+        return self.data[challenge].copy()
+
     def __load_data(self) -> None:
         '''
         All __read_ functions called here should return a tuple (data, valid, withd) for
