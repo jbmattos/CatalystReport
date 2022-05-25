@@ -27,8 +27,8 @@ class CatalystAssessments():
             self.path = CatalystAssessments.FUNDS_FILES[fund]
             self.data = None
             ## default properties
-            self.__is_default_filteredout = None
-            self.__default_min_char_count = 150     # Text features with less than minimun character-count are automatically filtered out
+            # self.__is_default_filteredout = None
+            # self.__default_min_char_count = 150     # Text features with less than minimun character-count are automatically filtered out
             # buildin methods
             self.__load_data()
             # self.__pipeline()
@@ -39,21 +39,18 @@ class CatalystAssessments():
     def assessments(self) -> pd.DataFrame:
         return self.data['assessments']
 
-    def get_filtered_out(self, type: str='all') -> pd.DataFrame:
-        '''
-        Return the complete assessments that were filtered out.
-        Types: default, ml_filter(?), ...
-        !!!!!!!!!!!
-        Change this function to select from pd the set of indexes present on all <self.__idx_default_filtered_out> keys
-        '''
-        ass = self.__default_filteredout_idx['default']
-        return self.__df[ass]
+    # def get_filtered_out(self, type: str='all') -> pd.DataFrame:
+    #     '''
+    #     Return the complete assessments that were filtered out.
+    #     Types: default, ml_filter(?), ...
+    #     !!!!!!!!!!!
+    #     Change this function to select from pd the set of indexes present on all <self.__idx_default_filtered_out> keys
+    #     '''
+    #     ass = self.__default_filteredout_idx['default']
+    #     return self.__df[ass]
 
-    def get_full_assessments(self) -> pd.DataFrame:
-        return self.__df
-
-    ## REVIEW ABOVE
-    ##############################################################
+    # def get_full_assessments(self) -> pd.DataFrame:
+    #     return self.__df
 
     def __load_data(self) -> None:
         '''

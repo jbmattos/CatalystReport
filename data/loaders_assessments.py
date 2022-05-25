@@ -9,7 +9,6 @@ follow the comments provided in this file
 to implement the necessary new-fund specific functions.
 '''
 
-from typing import Type
 import numpy as np
 import pandas as pd
 import os
@@ -21,14 +20,15 @@ ERR_DEF_ASSESSMENTS_FEAT = "Error while loading {} assessments: missing default 
 # MANUAL INPUT: For new fundings, add the file reference bellow
 # ---------------------------------------------------------------
 FUNDS_FILES = {      
-    # "f3": PATH+"Final_vCA Aggregated - fund3.xlsx",
+    "f3": PATH+"Community Aggregated - Review of Reviewers v3.xlsx",
     "f4": PATH+"Final_vCA Aggregated - fund4.xlsx",
     "f5": PATH+"vCA Aggregated - Fund 5.xlsx",
     "f6": PATH+"vCA Aggregated - Fund 6.xlsx",
     "f7": PATH+"vCA Aggregated - Fund 7.xlsx",
-    # "f8": PATH+"vCA Aggregated - Fund 8.xlsx"
+    "f8": PATH+"vCA Aggregated - Fund 8 (Final MVP candidate).xlsx"
 }
 DEFAULT_ASSESSMENTS_FEATS = ['CA','PROPOSAL_TITLE','CA_RATING','QA_STATUS','REASON','QA_CLASS']
+DEFAULT_AGG_TXT_FEAT = ['Impact / Alignment Note', 'Feasibility Note', 'Auditability Note']
 
 def available_data() -> dict:
     return FUNDS_FILES
@@ -62,22 +62,27 @@ def available_data() -> dict:
 ##################################################
 
 
-# def get_assessments_f3(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
-#     '''
-#     This function receives a xlsx file containing all Fund's Assessments data
-#     and return a pd.DataFrame [assessments x DEFAULT_ASSESSMENTS_FEATS]
+def get_assessments_f3(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    '''
+    This function receives a xlsx file containing all Fund's Assessments data
+    and return a pd.DataFrame [assessments x DEFAULT_ASSESSMENTS_FEATS]
 
-#     !!! It is important that the final dataframe contains all DEFAULT_ASSESSMENTS_FEATS
-#     '''
-#     # Setup the valid assessments dataframe
-#     df_valid = df_valid[DEFAULT_ASSESSMENTS_FEATS]
+    !!! It is important that the final dataframe contains all DEFAULT_ASSESSMENTS_FEATS
+    '''
+    data = xlsx_obj.parse(sheet_name='Proposals')
+    columns = {
+        'Idea Title' : 'PROPOSAL_TITLE',
+        'Assessor': 'CA'
+    }
+    df_final = data[columns.keys()].rename(columns=columns)
+    df_final['CA_RATING'] = np.nan
+    df_final['QA_CLASS'] = np.nan
+    df_final['REASON'] = data['Outcome'].replace({np.nan:"NOT_VOTTED"})
+    df_final['QA_STATUS'] = df_final['REASON'].map(lambda v: 'Excluded' if v=='UNJUSTIFIED' else 'Valid')
+    df_final = df_final[DEFAULT_ASSESSMENTS_FEATS]
 
-#     # Setup the excluded assessments dataframe
-#     df_exc = df_exc[DEFAULT_ASSESSMENTS_FEATS]
-
-#     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
-#     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-#     else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f3', DEFAULT_ASSESSMENTS_FEATS))
+    if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
+    else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f3', DEFAULT_ASSESSMENTS_FEATS))
 
 def get_assessments_f4(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     '''
@@ -222,6 +227,12 @@ def get_assessments_f7(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     filtered_out = (df_valid['QA_CLASS']=='Filtered Out')
     df_valid.loc[filtered_out,'QA_STATUS'] = 'Excluded'
     df_valid.loc[filtered_out,'REASON'] = 'Filtered Out'
+    ### QA_CLASS = less than min_char assessments:  status excluded and reason < min_char 
+    min_char = 150
+    less_minchar = valid[DEFAULT_AGG_TXT_FEAT].agg(''.join, axis=1).apply(lambda x: len(x)) < min_char
+    df_valid.loc[less_minchar,'QA_STATUS'] = 'Excluded'
+    df_valid.loc[filtered_out,'REASON'] = '<{} char'.format(min_char)
+    #
     df_valid = df_valid[DEFAULT_ASSESSMENTS_FEATS]
 
     # Setup the excluded blank assessments dataframe
@@ -241,22 +252,57 @@ def get_assessments_f7(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
     else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f7', DEFAULT_ASSESSMENTS_FEATS))
 
-# def get_assessments_f8(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
-#     '''
-#     This function receives a xlsx file containing all Fund's Assessments data
-#     and return a pd.DataFrame [assessments x DEFAULT_ASSESSMENTS_FEATS]
+def get_assessments_f8(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    '''
+    This function receives a xlsx file containing all Fund's Assessments data
+    and return a pd.DataFrame [assessments x DEFAULT_ASSESSMENTS_FEATS]
 
-#     !!! It is important that the final dataframe contains all DEFAULT_ASSESSMENTS_FEATS
-#     '''
-#     # Setup the valid assessments dataframe
-#     df_valid = df_valid[DEFAULT_ASSESSMENTS_FEATS]
+    !!! It is important that the final dataframe contains all DEFAULT_ASSESSMENTS_FEATS
+    '''
+    valid = xlsx_obj.parse(sheet_name='vCA Aggregated')
+    val_columns = {
+        'Idea Title' : 'PROPOSAL_TITLE',
+        'Assessor': 'CA'
+    }
+    df_valid = valid[val_columns.keys()].rename(columns=val_columns)
+    df_valid['CA_RATING'] = valid[['Impact / Alignment Rating', 'Feasibility Rating','Auditability Rating']].mean(axis=1)
 
-#     # Setup the excluded assessments dataframe
-#     df_exc = df_exc[DEFAULT_ASSESSMENTS_FEATS]
+    status_df = valid[['Result Excellent','Result Good','Result Filtered Out']].replace({'[xX]':True, np.nan: False}, regex=True)
+    ### QA_CLASS = excelent/good assessments:  status and reason valid
+    df_valid['QA_CLASS'] = status_df.apply(lambda row: row[row == True].index.values, axis='columns').replace({'Result Good':'Good', 'Result Excellent':'Excelent', 'Result Filtered Out':'Filtered Out'})
+    df_valid['QA_STATUS'] = 'Valid'
+    df_valid['REASON'] = 'Valid'
+    ### QA_CLASS = filtered out assessments:  status excluded and reason filtered out
+    filtered_out = (df_valid['QA_CLASS']=='Filtered Out')
+    df_valid.loc[filtered_out,'QA_STATUS'] = 'Excluded'
+    df_valid.loc[filtered_out,'REASON'] = 'Filtered Out'
+    ### QA_CLASS = less than min_char assessments:  status excluded and reason < min_char 
+    min_char = 150
+    less_minchar = valid[DEFAULT_AGG_TXT_FEAT].agg(''.join, axis=1).apply(lambda x: len(x)) < min_char
+    df_valid.loc[less_minchar,'QA_STATUS'] = 'Excluded'
+    df_valid.loc[filtered_out,'REASON'] = '<{} char'.format(min_char)
+    #
+    df_valid = df_valid[DEFAULT_ASSESSMENTS_FEATS]
 
-#     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
-#     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-#     else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f8', DEFAULT_ASSESSMENTS_FEATS))
+    # Setup the excluded blank assessments dataframe
+    exc = xlsx_obj.parse(sheet_name='Excluded Assessments')
+    exc_columns = {
+        'Idea Title' : 'PROPOSAL_TITLE',
+        'Assessor': 'CA'
+    }
+    df_exc = exc[exc.Blank.replace({'[xX]':True, np.nan: False}, regex=True)][exc_columns.keys()].rename(columns=exc_columns)
+    if df_exc.shape[0] > 0:
+        df_exc['CA_RATING'] = exc[['Impact / Alignment Rating', 'Feasibility Rating','Auditability Rating']].mean(axis=1)
+        df_exc['QA_STATUS'] = 'Excluded'
+        df_exc['QA_CLASS'] = np.nan
+        df_exc['REASON'] = 'Blank'
+        df_exc = df_exc[DEFAULT_ASSESSMENTS_FEATS]
+
+        df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
+    else:
+        df_final = df_valid.reset_index(drop=True)
+    if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
+    else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f8', DEFAULT_ASSESSMENTS_FEATS))
 
 
 ##################################################
