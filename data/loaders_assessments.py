@@ -28,6 +28,7 @@ FUNDS_FILES = {
     "f8": PATH+"vCA Aggregated - Fund 8 (Final MVP candidate).xlsx"
 }
 DEFAULT_ASSESSMENTS_FEATS = ['CA','PROPOSAL_TITLE','CA_RATING','QA_STATUS','REASON','QA_CLASS']
+DEFAULT_CA_FEATS = ['NUMBER_ASSESSMENTS','STATUS','REASON']
 DEFAULT_AGG_TXT_FEAT = ['Impact / Alignment Note', 'Feasibility Note', 'Auditability Note']
 
 def available_data() -> dict:
@@ -314,56 +315,102 @@ def get_assessments_f8(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 # TEMPLATE:
 #
 # ----------------------------------------
-# def get_cas_fN() -> dict:
-#     # Setup the following parameters
-#     params = {
-#         "sheet":"",         # xlsx sheet to load data
-#     }
-#     return params
+# def get_cas_fN(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+#     # Build dataframe from Unique Assessments' CAs and Default Features
+#     df_ca = pd.DataFrame(index=df_assess.CA.unique(), columns=DEFAULT_CA_FEATS)
+#     df_ca.sort_index(inplace=True)
+
+#     # input NUMBER_ASSESSMENTS
+#     df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
+
+#     # input ca's STATUS
+
+#     # input ca's status REASON
+
+#     return df_ca
 ##################################################
 
 
-# def get_cas_f3() -> dict:
-#     # Setup the following parameters
-#     params = {
-#         "sheet":"",         # xlsx sheet to load data
-#     }
-#     return params
+def get_cas_f3(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    # Build dataframe from Unique Assessments' CAs and Default Features
+    df_ca = pd.DataFrame(index=df_assess.CA.unique(), columns=DEFAULT_CA_FEATS)
+    df_ca.sort_index(inplace=True)
 
-def get_cas_f4() -> dict:
-    # Setup the following parameters
-    params = {
-        "sheet":"",         # xlsx sheet to load data
-    }
-    return params
+    # input NUMBER_ASSESSMENTS
+    df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
 
-def get_cas_f5() -> dict:
-    # Setup the following parameters
-    params = {
-        "sheet":"Community Advisors",         # xlsx sheet to load data
-    }
-    return params
+    return df_ca
 
-def get_cas_f6() -> dict:
-    # Setup the following parameters
-    params = {
-        "sheet":""
-    }
-    return params
+def get_cas_f4(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    # Build dataframe from Unique Assessments' CAs and Default Features
+    df_ca = pd.DataFrame(index=df_assess.CA.unique(), columns=DEFAULT_CA_FEATS)
+    df_ca.sort_index(inplace=True)
 
-def get_cas_f7() -> dict:
-    # Setup the following parameters
-    params = {
-        "sheet":"" 
-    }
-    return params
+    # input NUMBER_ASSESSMENTS
+    df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
 
-# def get_cas_f8() -> dict:
-#     # Setup the following parameters
-#     params = {
-#         "sheet":"",         # xlsx sheet to load data
-#     }
-#     return params
+    # input ca's STATUS
+    df_ca['STATUS'] = 'Included'
+    exc = xlsx_obj.parse(sheet_name='Excluded assessors')
+    df_ca.loc[exc.name,'STATUS'] = 'Excluded'
+
+    # input ca's status REASON
+    df_ca['REASON'] = 'Included'
+    exc.set_index('name', inplace=True)
+    exc.sort_index(inplace=True)
+    df_ca.loc[exc.index.values,'REASON'] = exc[['By Card', 'By Blanks']].apply(lambda row: row[row == True].index.values, axis='columns').replace({'By Card':'By Card', 'By Blanks':'By Blanks'})
+    
+    return df_ca
+
+def get_cas_f5(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    # Build dataframe from Unique Assessments' CAs and Default Features
+    df_ca = pd.DataFrame(index=df_assess.CA.unique(), columns=DEFAULT_CA_FEATS)
+    df_ca.sort_index(inplace=True)
+
+    # input NUMBER_ASSESSMENTS
+    df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
+
+    # input ca's STATUS
+    cas = xlsx_obj.parse(sheet_name='Community Advisors')
+    cas.set_index('assessor', inplace=True)
+    cas.sort_index(inplace=True)
+    df_ca['STATUS'] = cas.excluded.map(lambda v: 'Excluded' if v == True else 'Included')
+
+    # input ca's status REASON
+    
+    return df_ca
+
+def get_cas_f6(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    # Build dataframe from Unique Assessments' CAs and Default Features
+    df_ca = pd.DataFrame(index=df_assess.CA.unique(), columns=DEFAULT_CA_FEATS)
+    df_ca.sort_index(inplace=True)
+
+    # input NUMBER_ASSESSMENTS
+    df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
+
+    return df_ca
+
+
+def get_cas_f7(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    # Build dataframe from Unique Assessments' CAs and Default Features
+    df_ca = pd.DataFrame(index=df_assess.CA.unique(), columns=DEFAULT_CA_FEATS)
+    df_ca.sort_index(inplace=True)
+
+    # input NUMBER_ASSESSMENTS
+    df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
+
+    return df_ca
+
+
+def get_cas_f8(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    # Build dataframe from Unique Assessments' CAs and Default Features
+    df_ca = pd.DataFrame(index=df_assess.CA.unique(), columns=DEFAULT_CA_FEATS)
+    df_ca.sort_index(inplace=True)
+
+    # input NUMBER_ASSESSMENTS
+    df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
+
+    return df_ca
 
 
 ##################################################

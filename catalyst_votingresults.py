@@ -31,8 +31,8 @@ class CatalystVotingResults():
             self.fund = fund
             self.path = CatalystVotingResults.FUNDS_FILES[fund]
             self.data = None
-            self.results = None
-            self.validation = None
+            self.__results = None
+            self.__validation = None
             self.withdrawals = None
             self.__load_data()
             self.__pipeline()
@@ -40,6 +40,12 @@ class CatalystVotingResults():
     @property
     def challenges(self) -> list:
         return list(self.data.keys())
+    @property
+    def results(self) -> pd.DataFrame:
+        return self.__results.copy()
+    @property
+    def validation(self) -> pd.DataFrame:
+        return self.__validation.copy()
     
     def get_challenge_results(self, challenge:str) -> pd.DataFrame:
         return self.data[challenge].copy()
@@ -59,7 +65,7 @@ class CatalystVotingResults():
             raise TypeError('File extension not supported. Supported < CatalystData.__read_file() > extensions: {}'.format(__supp_ext))
         
         self.data = data
-        self.validation = valid
+        self.__validation = valid
         self.withdrawals = withd
         return
 
@@ -67,7 +73,7 @@ class CatalystVotingResults():
         '''
         Return 
             self.data = None
-            self.validation = None
+            self.__validation = None
             self.withdrawals = None
         '''
         xlsx_obj = pd.ExcelFile(self.path)
@@ -117,12 +123,12 @@ class CatalystVotingResults():
         '''
         This function generates a formatted Validation DataFrame
         
-        modifies: CatalystData.validation
+        modifies: CatalystData.__validation
         '''
-        if isinstance(self.validation, pd.DataFrame):
+        if isinstance(self.__validation, pd.DataFrame):
             func = 'validation_setup_{}'.format(self.fund)
             try: 
-                df = globals()[func](self.validation)
+                df = globals()[func](self.__validation)
             except: 
                 raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, 'self.__validation_setup()', func))
 
@@ -130,7 +136,7 @@ class CatalystVotingResults():
             df.dropna(subset=['challenge'],inplace=True)
             df.reset_index(drop=True, inplace=True)
             df['budget'] = df['budget'].astype(int)
-            self.validation = df
+            self.__validation = df
         return
 
     def __budget_setup(self) -> None:
@@ -156,7 +162,7 @@ class CatalystVotingResults():
                 if challenge in replace_validation: ch = replace_validation[challenge]
                 else: ch = challenge
                 try:
-                    bud = self.validation.loc[self.validation.challenge==ch]['budget'].item()
+                    bud = self.__validation.loc[self.__validation.challenge==ch]['budget'].item()
                 except:
                     warnings.warn(WAR_BUDGET_NOT_FOUND.format(self.fund, challenge, func))
                     bud = np.nan
@@ -169,7 +175,7 @@ class CatalystVotingResults():
         This function preprocess the DataFrames of each challenge in the fund
 
         modifies: CatalystData.data[fund] : DataFrame
-                  CatalystData.results
+                  CatalystData.__results
         '''
         func = 'get_process_{}'.format(self.fund)
         try: 
@@ -195,12 +201,12 @@ class CatalystVotingResults():
             to_concat.append(df[default_cols].copy())
         
         # concatenate all challenges' default data 
-        self.results = pd.concat(to_concat, axis='index')
-        self.results.reset_index(drop=True, inplace=True)
+        self.__results = pd.concat(to_concat, axis='index')
+        self.__results.reset_index(drop=True, inplace=True)
 
         # rearrange columns
-        cols = [c for c in CatalystVotingResults.DEFAULT_COLS if c in self.results.columns]
-        self.results = self.results[cols] 
+        cols = [c for c in CatalystVotingResults.DEFAULT_COLS if c in self.__results.columns]
+        self.__results = self.__results[cols] 
         return
 
     #-------------------

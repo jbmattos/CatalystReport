@@ -25,32 +25,26 @@ class CatalystAssessments():
         else: 
             self.fund = fund
             self.path = CatalystAssessments.FUNDS_FILES[fund]
-            self.data = None
-            ## default properties
-            # self.__is_default_filteredout = None
-            # self.__default_min_char_count = 150     # Text features with less than minimun character-count are automatically filtered out
+            self.__data = None
             # buildin methods
             self.__load_data()
-            # self.__pipeline()
             
-        
-    
     @property
     def assessments(self) -> pd.DataFrame:
-        return self.data['assessments']
+        return self.__data['assessments'].copy()
+    @property
+    def community_advisors(self) -> pd.DataFrame:
+        return self.__data['CAs'].copy()
+    
+    def get_ca_count_by_reason(self) -> pd.DataFrame:
+        df = self.assessments.groupby('CA')['REASON'].value_counts().unstack(fill_value=0)
+        if df.shape[1] == 0: return None
+        else: return df
 
-    # def get_filtered_out(self, type: str='all') -> pd.DataFrame:
-    #     '''
-    #     Return the complete assessments that were filtered out.
-    #     Types: default, ml_filter(?), ...
-    #     !!!!!!!!!!!
-    #     Change this function to select from pd the set of indexes present on all <self.__idx_default_filtered_out> keys
-    #     '''
-    #     ass = self.__default_filteredout_idx['default']
-    #     return self.__df[ass]
-
-    # def get_full_assessments(self) -> pd.DataFrame:
-    #     return self.__df
+    def get_ca_count_by_class(self) -> pd.DataFrame:
+        df = self.assessments.groupby('CA')['QA_CLASS'].value_counts().unstack(fill_value=0)
+        if df.shape[1] == 0: return None
+        else: return df
 
     def __load_data(self) -> None:
         '''
@@ -60,34 +54,26 @@ class CatalystAssessments():
                      vcas : pd.DataFrame,
                      ...
                     }
-            __is_default_filteredout
         '''
         __supp_ext = ['.xlsx']
 
 
         if self.path[-5:] == '.xlsx':
-            xlsx_obj = self.__read_xlsx_file()
+            self.__load_data_from_xlsx_files()
         else:
             raise TypeError('File extension not supported. Supported < CatalystData.__read_file() > extensions: {}'.format(__supp_ext))
-        
+    
+    def __load_data_from_xlsx_files(self) -> None:
+        xlsx_obj = pd.ExcelFile(self.path)
+
         data = {}
         data['assessments'] = self.__get_assessments(xlsx_obj)
-        # data['CAs'] = self.__get_comunity_advisors(xlsx_obj)
+        data['CAs'] = self.__get_comunity_advisors(df_assess=data['assessments'], xlsx_obj=xlsx_obj)
         # data['vCAs'] = self.__get_veteran_comunity_advisors(xlsx_obj)
 
 
-
-        # Rows (assessments) to filter out
-        ## The length of the assessment is insufficient to provide value, 
-        ## for example less than 150 characters across the three criteria fields of the assessment. 
-        ## These will be filtered. 
-
-        # self.__is_default_filteredout = data['assessments'][CatalystAssessments.DEFAULT_TXT_FEAT].agg(''.join, axis=1).apply(lambda x: len(x)) < self.__default_min_char_count
-        self.data = data
+        self.__data = data.copy()
         return
-    
-    def __read_xlsx_file(self) -> dict:
-        return pd.ExcelFile(self.path)
     
     def __get_veteran_comunity_advisors(self, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
         '''
@@ -103,19 +89,16 @@ class CatalystAssessments():
         data = xlsx_obj.parse(sheet_name=params['sheet'])
         return data
     
-    def __get_comunity_advisors(self, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    def __get_comunity_advisors(self, df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
         '''
         This function returns a pd.DataFrame containing the relevant information 
         about all comunity advisors participating in the Fund process
         '''
         func = 'get_cas_{}'.format(self.fund)
         try: 
-            params = globals()[func]()
+            return globals()[func](df_assess=df_assess, xlsx_obj=xlsx_obj)
         except: 
             raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, 'self.__get_comunity_advisors()', func))
-        
-        data = xlsx_obj.parse(sheet_name=params['sheet'])
-        return data
 
     def __get_assessments(self, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
         '''
@@ -127,16 +110,6 @@ class CatalystAssessments():
             return globals()[func](xlsx_obj=xlsx_obj)
         except: 
             raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, 'self.__get_assessments()', func))
-
-    def __pipeline(self) -> None:
-        '''
-        This function loads the Catalyst results from data source
-        and returns a CatalystData object with relevant data preprocessed
-
-        The calls from this function manipulate CatalystData objects while performing data preprocessing
-        '''
-        return 
-
 
     #-------------------
     # FORMAT FUNCTIONS
