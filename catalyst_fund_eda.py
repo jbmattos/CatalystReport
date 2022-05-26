@@ -63,7 +63,7 @@ class CatalystFundEDA():
         return list(set(self.__default_stats_feats).intersection(set(self.results.columns)))
 
     def get_challenge_results(self, challenge:str) -> pd.DataFrame:
-        return self.__catalyst_results.data[challenge].copy()
+        return self.__catalyst_results.get_challenge_results(challenge)
 
     def report_statistics(self) -> None:
         '''

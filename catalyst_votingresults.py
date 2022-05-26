@@ -30,7 +30,7 @@ class CatalystVotingResults():
         else: 
             self.fund = fund
             self.path = CatalystVotingResults.FUNDS_FILES[fund]
-            self.data = None
+            self.__data = None
             self.__results = None
             self.__validation = None
             self.withdrawals = None
@@ -39,7 +39,7 @@ class CatalystVotingResults():
     
     @property
     def challenges(self) -> list:
-        return list(self.data.keys())
+        return list(self.__data.keys())
     @property
     def results(self) -> pd.DataFrame:
         return self.__results.copy()
@@ -48,7 +48,7 @@ class CatalystVotingResults():
         return self.__validation.copy()
     
     def get_challenge_results(self, challenge:str) -> pd.DataFrame:
-        return self.data[challenge].copy()
+        return self.__data[challenge].copy()
 
     def __load_data(self) -> None:
         '''
@@ -64,7 +64,7 @@ class CatalystVotingResults():
         else:
             raise TypeError('File extension not supported. Supported < CatalystData.__read_file() > extensions: {}'.format(__supp_ext))
         
-        self.data = data
+        self.__data = data
         self.__validation = valid
         self.withdrawals = withd
         return
@@ -72,7 +72,7 @@ class CatalystVotingResults():
     def __read_xlsx_file(self) -> dict:
         '''
         Return 
-            self.data = None
+            self.__data = None
             self.__validation = None
             self.withdrawals = None
         '''
@@ -154,7 +154,7 @@ class CatalystVotingResults():
         replace_validation = params['replace_validation']
         input_bud = params['input_bud']
 
-        dfs = self.data
+        dfs = self.__data
         for challenge in dfs.keys():
             if challenge in input_bud:
                 bud = input_bud[challenge]
@@ -185,7 +185,7 @@ class CatalystVotingResults():
         rename_default_cols = params['rename_default_cols']
 
         to_concat = []
-        for challenge, df in self.data.items():
+        for challenge, df in self.__data.items():
             # rename columns 
             df.rename(columns=rename_default_cols, inplace=True)
             
@@ -196,7 +196,7 @@ class CatalystVotingResults():
             df['REQUESTED %'] = 100*df['REQUESTED $']/df['Budget']
             df = self.__format_status(df, challenge)
 
-            self.data[challenge] = df.copy()
+            self.__data[challenge] = df.copy()
             default_cols = list(set(df.columns).intersection(CatalystVotingResults.DEFAULT_COLS))
             to_concat.append(df[default_cols].copy())
         

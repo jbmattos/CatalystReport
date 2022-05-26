@@ -33,18 +33,40 @@ class CatalystAssessments():
     def assessments(self) -> pd.DataFrame:
         return self.__data['assessments'].copy()
     @property
-    def community_advisors(self) -> pd.DataFrame:
+    def cas(self) -> pd.DataFrame:
         return self.__data['CAs'].copy()
+    @property
+    def vcas(self) -> pd.DataFrame:
+        return self.__data['vCAs'].copy()
     
+    def get_ca_count_by_status(self) -> pd.DataFrame:
+        df = self.assessments.groupby('CA')['QA_STATUS'].value_counts().unstack(fill_value=0)
+        if df.shape[1] == 0: 
+            print('!! No CatalystAssessments.assessments.QA_STATUS information.')
+            return
+        else: return df
+
     def get_ca_count_by_reason(self) -> pd.DataFrame:
         df = self.assessments.groupby('CA')['REASON'].value_counts().unstack(fill_value=0)
-        if df.shape[1] == 0: return None
+        if df.shape[1] == 0: 
+            print('!! No CatalystAssessments.assessments.REASON information.')
+            return
         else: return df
 
     def get_ca_count_by_class(self) -> pd.DataFrame:
         df = self.assessments.groupby('CA')['QA_CLASS'].value_counts().unstack(fill_value=0)
-        if df.shape[1] == 0: return None
+        if df.shape[1] == 0: 
+            print('!! No CatalystAssessments.assessments.QA_CLASS information.')
+            return
         else: return df
+    
+    def get_vca_count_by_class(self) -> pd.DataFrame:
+        '''
+        similar to get_ca_count_by_class
+        return a dataframe containing the vCAs by their Reviews classification counts
+        '''
+        # create a key on __data to save this information, since it will have to be built from other documents in __load_data
+        pass
 
     def __load_data(self) -> None:
         '''
@@ -56,8 +78,6 @@ class CatalystAssessments():
                     }
         '''
         __supp_ext = ['.xlsx']
-
-
         if self.path[-5:] == '.xlsx':
             self.__load_data_from_xlsx_files()
         else:
@@ -67,9 +87,10 @@ class CatalystAssessments():
         xlsx_obj = pd.ExcelFile(self.path)
 
         data = {}
+        # the following methods are mappings to fund-specific loader's functions
         data['assessments'] = self.__get_assessments(xlsx_obj)
         data['CAs'] = self.__get_comunity_advisors(df_assess=data['assessments'], xlsx_obj=xlsx_obj)
-        # data['vCAs'] = self.__get_veteran_comunity_advisors(xlsx_obj)
+        data['vCAs'] = self.__get_veteran_comunity_advisors(xlsx_obj)
 
 
         self.__data = data.copy()
@@ -82,12 +103,9 @@ class CatalystAssessments():
         '''
         func = 'get_vcas_{}'.format(self.fund)
         try: 
-            params = globals()[func]()
+            return globals()[func](xlsx_obj=xlsx_obj)
         except: 
             raise TypeError(ERR_FNC_NOT_FOUND.format(self.fund, 'self.__get_veteran_comunity_advisors()', func))
-        
-        data = xlsx_obj.parse(sheet_name=params['sheet'])
-        return data
     
     def __get_comunity_advisors(self, df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
         '''

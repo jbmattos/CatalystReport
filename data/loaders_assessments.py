@@ -14,7 +14,7 @@ import pandas as pd
 import os
 
 PATH = os.path.dirname(__file__)+'/datafiles_assessments/'
-ERR_DEF_ASSESSMENTS_FEAT = "Error while loading {} assessments: missing default features.\nPlease,assure the returning pd.DataFrame to contain the following features: {}."
+ERR_DEFAULT_FEAT = "Error while loading {}: missing default features.\nPlease,assure the returning pd.DataFrame to contain the following features: {}."
 
 # ---------------------------------------------------------------
 # MANUAL INPUT: For new fundings, add the file reference bellow
@@ -29,6 +29,7 @@ FUNDS_FILES = {
 }
 DEFAULT_ASSESSMENTS_FEATS = ['CA','PROPOSAL_TITLE','CA_RATING','QA_STATUS','REASON','QA_CLASS']
 DEFAULT_CA_FEATS = ['NUMBER_ASSESSMENTS','STATUS','REASON']
+DEFAULT_VCA_FEATS = ['NAME','NUMBER_REVIEWS','URL']
 DEFAULT_AGG_TXT_FEAT = ['Impact / Alignment Note', 'Feasibility Note', 'Auditability Note']
 
 def available_data() -> dict:
@@ -59,7 +60,7 @@ def available_data() -> dict:
 
 #     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
 #     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-#     else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_fN', DEFAULT_ASSESSMENTS_FEATS))
+#     else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_fN', DEFAULT_ASSESSMENTS_FEATS))
 ##################################################
 
 
@@ -83,7 +84,7 @@ def get_assessments_f3(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     df_final = df_final[DEFAULT_ASSESSMENTS_FEATS]
 
     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-    else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f3', DEFAULT_ASSESSMENTS_FEATS))
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_f3', DEFAULT_ASSESSMENTS_FEATS))
 
 def get_assessments_f4(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     '''
@@ -118,7 +119,7 @@ def get_assessments_f4(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 
     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-    else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f4', DEFAULT_ASSESSMENTS_FEATS))
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_f4', DEFAULT_ASSESSMENTS_FEATS))
 
 def get_assessments_f5(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     '''
@@ -157,7 +158,7 @@ def get_assessments_f5(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
 
     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-    else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f5', DEFAULT_ASSESSMENTS_FEATS))
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_f5', DEFAULT_ASSESSMENTS_FEATS))
 
 def get_assessments_f6(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     '''
@@ -173,11 +174,13 @@ def get_assessments_f6(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
         'Assessor': 'CA'
     }
     df_valid = valid[val_columns.keys()].rename(columns=val_columns)
+    df_valid = df_valid[df_valid.PROPOSAL_TITLE!='WITHDRAW'].copy()
     df_valid['CA_RATING'] = valid[['Impact / Alignment Rating', 'Feasibility Rating','Auditability Rating']].mean(axis=1)
 
     status_df = valid[['Result Excellent','Result Good','Result Filtered Out']].replace({'[xX]':True, np.nan: False}, regex=True)
     ### QA_CLASS = excelent/good assessments:  status and reason valid
-    df_valid['QA_CLASS'] = status_df.apply(lambda row: row[row == True].index.values, axis='columns').replace({'Result Good':'Good', 'Result Excellent':'Excelent', 'Result Filtered Out':'Filtered Out'})
+    df_valid['QA_CLASS'] = status_df.apply(lambda row: str(row[row == True].index.values), axis='columns')
+    df_valid['QA_CLASS'] = df_valid['QA_CLASS'].apply(lambda v: v.replace('[','').replace(']','').replace('Result ','').replace("'",''))
     df_valid['QA_STATUS'] = 'Valid'
     df_valid['REASON'] = 'Valid'
     ### QA_CLASS = filtered out assessments:  status excluded and reason filtered out
@@ -201,7 +204,7 @@ def get_assessments_f6(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 
     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-    else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f6', DEFAULT_ASSESSMENTS_FEATS))
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_f6', DEFAULT_ASSESSMENTS_FEATS))
 
 def get_assessments_f7(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     '''
@@ -221,7 +224,8 @@ def get_assessments_f7(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 
     status_df = valid[['Result Excellent','Result Good','Result Filtered Out']].replace({'[xX]':True, np.nan: False}, regex=True)
     ### QA_CLASS = excelent/good assessments:  status and reason valid
-    df_valid['QA_CLASS'] = status_df.apply(lambda row: row[row == True].index.values, axis='columns').replace({'Result Good':'Good', 'Result Excellent':'Excelent', 'Result Filtered Out':'Filtered Out'})
+    df_valid['QA_CLASS'] = status_df.apply(lambda row: str(row[row == True].index.values), axis='columns')
+    df_valid['QA_CLASS'] = df_valid['QA_CLASS'].apply(lambda v: v.replace('[','').replace(']','').replace('Result ','').replace("'",''))
     df_valid['QA_STATUS'] = 'Valid'
     df_valid['REASON'] = 'Valid'
     ### QA_CLASS = filtered out assessments:  status excluded and reason filtered out
@@ -251,7 +255,7 @@ def get_assessments_f7(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 
     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-    else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f7', DEFAULT_ASSESSMENTS_FEATS))
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_f7', DEFAULT_ASSESSMENTS_FEATS))
 
 def get_assessments_f8(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     '''
@@ -270,7 +274,8 @@ def get_assessments_f8(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 
     status_df = valid[['Result Excellent','Result Good','Result Filtered Out']].replace({'[xX]':True, np.nan: False}, regex=True)
     ### QA_CLASS = excelent/good assessments:  status and reason valid
-    df_valid['QA_CLASS'] = status_df.apply(lambda row: row[row == True].index.values, axis='columns').replace({'Result Good':'Good', 'Result Excellent':'Excelent', 'Result Filtered Out':'Filtered Out'})
+    df_valid['QA_CLASS'] = status_df.apply(lambda row: str(row[row == True].index.values), axis='columns')
+    df_valid['QA_CLASS'] = df_valid['QA_CLASS'].apply(lambda v: v.replace('[','').replace(']','').replace('Result ','').replace("'",''))
     df_valid['QA_STATUS'] = 'Valid'
     df_valid['REASON'] = 'Valid'
     ### QA_CLASS = filtered out assessments:  status excluded and reason filtered out
@@ -303,7 +308,7 @@ def get_assessments_f8(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     else:
         df_final = df_valid.reset_index(drop=True)
     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-    else: raise TypeError(ERR_DEF_ASSESSMENTS_FEAT.format('get_assessments_f8', DEFAULT_ASSESSMENTS_FEATS))
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_f8', DEFAULT_ASSESSMENTS_FEATS))
 
 
 ##################################################
@@ -422,54 +427,103 @@ def get_cas_f8(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 # TEMPLATE:
 #
 # ----------------------------------------
-# def get_vcas_fN() -> dict:
-#     # Setup the following parameters
-#     params = {
-#         "sheet":"",         # xlsx sheet to load data
-#     }
-#     return params
+# def get_vcas_fN(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+#     # Load vCAs information
+#     vcas = xlsx_obj.parse(sheet_name='')
+
+#     # Input NAME feature
+
+#     # Input NUMBER_REVIEWS feature 
+
+#     # Input URL feature 
+
+#     vcas = vcas[DEFAULT_VCA_FEATS]
+#     if set(vcas.columns)==set(DEFAULT_VCA_FEATS): return vcas
+#     else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_f8', DEFAULT_VCA_FEATS))
 ##################################################
 
 
-# def get_vcas_f3() -> dict:
-#     # Setup the following parameters
-#     params = {
-#         "sheet":"",         # xlsx sheet to load data
-#     }
-#     return params
+def get_vcas_f3(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    vcas_names = ['Rene M','Łukasz K','Robert T', 'Olexiy M','Filip B','Michael P',
+                'Cryptostig','2072 [ANFRA]','Rodrigo P','RescuedCookie22',
+                'CryptoPrime','Steve A','Matias P','Jaime S','Ilija','Anthony',
+                'Greg P','James A','Thiago','Danny R']
+    df = xlsx_obj.parse(sheet_name='Proposals')[vcas_names]
+    vcas = pd.DataFrame(columns=DEFAULT_VCA_FEATS)
+    vcas['NAME'] = df.count().index
+    vcas['NUMBER_REVIEWS'] = df.count().values
+    
+    if set(vcas.columns)==set(DEFAULT_VCA_FEATS): return vcas
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_vcas_f3', DEFAULT_VCA_FEATS))
 
-def get_vcas_f4() -> dict:
-    # Setup the following parameters
-    params = {
-        "sheet":"",         # xlsx sheet to load data
+def get_vcas_f4(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    
+    # local vars
+    vca_cols = ["Fair","Constructive Feedback","Profanity","Score doesn't match","Copy","Wrong challenge","Wrong criteria","General Infraction","General Infraction: rationale"]
+    sheet_name_mask = 'vCA Master File Fund 4 - '
+    vca_sheets = [s for s in xlsx_obj.sheet_names if sheet_name_mask in s]
+
+    # vcas dataframe
+    vcas = pd.DataFrame(columns=DEFAULT_VCA_FEATS)
+
+    # Input NAME feature
+    func_names = lambda sheet_name: sheet_name.replace(sheet_name_mask, '')
+    vcas['NAME'] = list(map(func_names, vca_sheets))
+
+    # Input NUMBER_REVIEWS feature
+    func_n_reviews = lambda name: xlsx_obj.parse(sheet_name=sheet_name_mask+name)[vca_cols].dropna(axis='index', how='all').shape[0]
+    vcas['NUMBER_REVIEWS'] = vcas['NAME'].map(func_n_reviews)
+
+    vcas = vcas[DEFAULT_VCA_FEATS]
+    if set(vcas.columns)==set(DEFAULT_VCA_FEATS): return vcas
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_vcas_f4', DEFAULT_VCA_FEATS))
+
+def get_vcas_f5(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    # Load vCAs information
+    vcas = xlsx_obj.parse(sheet_name='Veteran Community Advisors').rename(columns={'link':'URL'})
+    # Input NAME feature
+    vcas['NAME'] = np.nan
+    # Input NUMBER_REVIEWS feature 
+    vcas['NUMBER_REVIEWS'] = np.nan
+
+    vcas = vcas[DEFAULT_VCA_FEATS]
+    if set(vcas.columns)==set(DEFAULT_VCA_FEATS): return vcas
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_vcas_f5', DEFAULT_VCA_FEATS))
+
+def get_vcas_f6(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    rename = {
+        'name' : 'NAME',
+        'vca_link': 'URL',
+        'No. of Reviews': 'NUMBER_REVIEWS'
     }
-    return params
+    vcas = xlsx_obj.parse(sheet_name='Veteran Community Advisors').rename(columns=rename)
+    vcas = vcas[DEFAULT_VCA_FEATS]
 
-def get_vcas_f5() -> dict:
-    # Setup the following parameters
-    params = {
-        "sheet":"Veteran Community Advisors",         # xlsx sheet to load data
+    if set(vcas.columns)==set(DEFAULT_VCA_FEATS): return vcas
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_vcas_f6', DEFAULT_VCA_FEATS))
+
+def get_vcas_f7(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    rename = {
+        'Name' : 'NAME',
+        'vca_link': 'URL',
+        'No. of Reviews': 'NUMBER_REVIEWS'
     }
-    return params
+    vcas = xlsx_obj.parse(sheet_name='Veteran Community Advisors').rename(columns=rename)
+    vcas = vcas[DEFAULT_VCA_FEATS]
 
-def get_vcas_f6() -> dict:
-    # Setup the following parameters
-    params = {
-        "sheet":"Veteran Community Advisors"
+    if set(vcas.columns)==set(DEFAULT_VCA_FEATS): return vcas
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_vcas_f7', DEFAULT_VCA_FEATS))
+
+def get_vcas_f8(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
+    rename = {
+        'name' : 'NAME',
+        'vca_link': 'URL',
+        'No. of Reviews': 'NUMBER_REVIEWS'
     }
-    return params
+    vcas = xlsx_obj.parse(sheet_name='Veteran Community Advisors').rename(columns=rename)
+    vcas['NUMBER_REVIEWS'] = vcas['NUMBER_REVIEWS'].astype(int)
+    vcas = vcas[DEFAULT_VCA_FEATS]
 
-def get_vcas_f7() -> dict:
-    # Setup the following parameters
-    params = {
-        "sheet":"Veteran Community Advisors" 
-    }
-    return params
-
-# def get_vcas_f8() -> dict:
-#     # Setup the following parameters
-#     params = {
-#         "sheet":"",         # xlsx sheet to load data
-#     }
-#     return params
+    if set(vcas.columns)==set(DEFAULT_VCA_FEATS): return vcas
+    else: raise TypeError(ERR_DEFAULT_FEAT.format('get_vcas_f8', DEFAULT_VCA_FEATS))
 
