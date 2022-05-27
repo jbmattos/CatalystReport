@@ -15,18 +15,13 @@ import pandas as pd
 import warnings
 
 # review
-import itertools
-import json
-import matplotlib.backends.backend_pdf
-import pathlib
 import seaborn as sns
 
 from matplotlib import pyplot as plt
-from matplotlib.gridspec import SubplotSpec
 from matplotlib.pylab import rcParams
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from catalyst_votingresults import CatalystVotingResults
+from catalyst_assessments import CatalystAssessments
 
 warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
 warnings.simplefilter('ignore', category=UserWarning)
@@ -36,7 +31,7 @@ ERR_STATS_FEAT = 'Unidentified statistical feature {}. Please, select one of the
 class CatalystFundEDA():
     def __init__(self, fund: str) -> None:
         self.__catalyst_results = CatalystVotingResults(fund)
-        self.__catalyst_assessments = None  # load Assessments class here
+        self.__catalyst_assessments = CatalystAssessments(fund)
         self.__default_score_feat = 'SCORE'
         self.__default_stats_feats = ['SCORE','YES','NO','Unique Yes','Unique No','Result','REQUESTED $','REQUESTED %']
         self.__palette_status = {"FUNDED": '#0570b0', # blue
@@ -122,6 +117,130 @@ class CatalystFundEDA():
             self.__plot_buddist(df, idx=challenge)
         return
     
+    def plot_assessments_by_proposals_hist(self) -> None:
+        rcParams["font.size"] = 20
+        rows = 1
+        cols = 2
+        bins = 10
+        rcParams['figure.figsize'] = 9*cols, 6*rows
+        fig, axes = plt.subplots(nrows=rows, ncols=cols, num='ass_dist', clear=True, sharex=True, sharey=True)
+
+        # All proposals
+        ax = axes[0]
+        self.__catalyst_assessments.assessments.PROPOSAL_TITLE.value_counts().plot.hist(bins=bins, 
+                                                                                        ax=ax, 
+                                                                                        color=self.__palette_status['FUNDED'])
+        ax.set_title("Overall Assessments Histogram")
+        ax.set_ylabel('Proposal count')
+        ax.set_xlabel('Number of Assessments')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        # ax.set_xticks(range(0,
+        #                     self.__catalyst_assessments.assessments.PROPOSAL_TITLE.value_counts().max(), 
+        #                     5))
+
+        # Valid assessments
+        ax = axes[1]
+        self.__catalyst_assessments.assessments[self.__catalyst_assessments.assessments.QA_STATUS=='Valid']\
+                                                .PROPOSAL_TITLE.value_counts().plot.hist(bins=bins, 
+                                                                                        ax=ax, 
+                                                                                        color=self.__palette_status['FUNDED'])
+        ax.set_title("Valid Assessments Histogram")
+        ax.set_ylabel('Proposal count')
+        ax.set_xlabel('Number of Assessments')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        plt.show()
+        return
+    
+    def plot_assessments_status_overview(self) -> None:
+        rcParams["font.size"] = 20
+        rcParams['figure.figsize'] = 15, 6
+        palette = ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69','#fccde5','#d9d9d9','#bc80bd','#ccebc5','#ffed6f']
+        pointer = 0
+
+        print("This fund had a total number of {} assessments.".format(self.__catalyst_assessments.assessments.shape[0]))
+
+        # Assessments Status (valid/excluded): overall assessments
+        x = list(self.__catalyst_assessments.assessments.QA_STATUS.unique())
+        y = [len(self.__catalyst_assessments.assessments[self.__catalyst_assessments.assessments['QA_STATUS']==status]) 
+                                                         for status in x]
+        c = palette[pointer:len(x)+pointer]
+        pointer = len(x)
+        
+        fig = plt.figure()
+        ax = fig.add_axes([0,0,1,1])
+        ax.axis('equal')
+        explode = [0.03]*len(x)
+        ax.pie(y,
+            labels=x,
+            autopct='%1.2f%%',
+            colors=c,
+            shadow=True,
+            pctdistance=0.5,
+            labeldistance=1.2,
+            explode = explode)
+        ax.set_title("Overall Assessments status")
+        plt.legend(bbox_to_anchor=(1.05, 0), loc=3, borderaxespad=0.)
+        centre_circle = plt.Circle((0,0),0.70,fc='white')
+        fig = plt.gcf()
+        fig.gca().add_artist(centre_circle)
+        plt.show()
+
+        # If QA assessments: assessments' classification (excelent, good, filtered out)
+        if self.__catalyst_assessments.assessments.QA_CLASS.count() > 0:
+            db = self.__catalyst_assessments.assessments.dropna(subset=['QA_CLASS'])
+            x = list(db.QA_CLASS.unique())
+            y = [len(db['QA_CLASS']==status) for status in x]
+            c = palette[pointer:len(x)+pointer]
+            pointer = len(x)
+
+            fig = plt.figure()
+            ax = fig.add_axes([0,0,1,1])
+            ax.axis('equal')
+            explode = [0.03]*len(x)
+            ax.pie(y,
+                labels=x,
+                autopct='%1.2f%%',
+                colors=c,
+                shadow=True,
+                pctdistance=0.5,
+                labeldistance=1.2,
+                explode = explode)
+            ax.set_title("QA Assessments results")
+            plt.legend(bbox_to_anchor=(1.05, 0), loc=3, borderaxespad=0.)
+            centre_circle = plt.Circle((0,0),0.70,fc='white')
+            fig = plt.gcf()
+            fig.gca().add_artist(centre_circle)
+            plt.show()
+
+        # Excluded assessments (blanks, filtered out, less min_char...)
+        db = self.__catalyst_assessments.assessments[self.__catalyst_assessments.assessments.QA_STATUS=='Excluded']
+        x = list(db.REASON.unique())
+        y = [len(db['REASON']==status) for status in x]
+        c = palette[pointer:len(x)+pointer]
+        pointer = len(x)
+
+        fig = plt.figure()
+        ax = fig.add_axes([0,0,1,1])
+        ax.axis('equal')
+        explode = [0.03]*len(x)
+        ax.pie(y,
+            labels=x,
+            autopct='%1.2f%%',
+            colors=c,
+            shadow=True,
+            pctdistance=0.5,
+            labeldistance=1.2,
+            explode = explode)
+        ax.set_title("Excluded Assessments")
+        centre_circle = plt.Circle((0,0),0.70,fc='white')
+        fig = plt.gcf()
+        plt.legend(bbox_to_anchor=(1.05, 0), loc=3, borderaxespad=0.)
+        fig.gca().add_artist(centre_circle)
+        plt.show()
+        return
+
     def __plot_buddist(self, df:pd.DataFrame, idx:str) -> None:
 
         x = list(df.STATUS.unique())

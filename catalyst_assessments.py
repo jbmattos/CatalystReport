@@ -7,7 +7,6 @@ into properly adjusted data structure to data analysis.
 
 import numpy as np
 import pandas as pd
-import warnings
 
 from data.loaders_assessments import *
 
