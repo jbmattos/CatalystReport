@@ -199,6 +199,7 @@ def get_assessments_f6(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     df_exc['QA_STATUS'] = 'Excluded'
     df_exc['QA_CLASS'] = np.nan
     df_exc['REASON'] = 'Blank'
+    df_exc = df_exc[df_exc.PROPOSAL_TITLE!='WITHDRAW'].copy()
     df_exc = df_exc[DEFAULT_ASSESSMENTS_FEATS]
 
     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)

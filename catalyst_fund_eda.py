@@ -56,18 +56,24 @@ class CatalystFundEDA():
     @property
     def stats_feats(self) -> list:
         return list(set(self.__default_stats_feats).intersection(set(self.results.columns)))
+        
+    def fund_report(self) -> None:
+        '''
+        Generate a fund report:
+        
+        > Overall information
+            - Number of assessments
+            - Number of CAs (retention percentage)
+            - Number of vCAs 
+            - Voting Results information?
+        
+        > Plots information
+            
+        '''
+        pass
 
     def get_challenge_results(self, challenge:str) -> pd.DataFrame:
         return self.__catalyst_results.get_challenge_results(challenge)
-
-    def report_statistics(self) -> None:
-        '''
-        Reports statistic data...
-        '''
-        if self.__score_feat in self.results:
-            self.plot_score_overview()
-        # add other analysis
-        return
     
     def get_statistics(self, feats:list=[], metrics:list=[]) -> pd.DataFrame:
         if not feats: feats = self.stats_feats
@@ -78,6 +84,17 @@ class CatalystFundEDA():
                             metrics*len(feats))
             return df_stats[m_selector]
         else: return df_stats
+    
+    def get_rating_stats_by_proposal(self) -> pd.DataFrame:
+        return self.__catalyst_assessments.assessments.groupby('PROPOSAL_TITLE')['CA_RATING'].describe().sort_index()
+
+    def get_ca_retention(self) -> pd.DataFrame:
+        last_id = 'f{}'.format(int(self.fund[-1])-1)
+        if last_id in CatalystAssessments.FUNDS_FILES.keys():
+            return self.__ca_retention(f_last=last_id)
+        else:
+            print("!! No previous Fund to analyse retention.")
+            return 
 
     def plot_distribution(self, feat:str='SCORE') -> None:
         if feat in self.stats_feats:
@@ -268,6 +285,15 @@ class CatalystFundEDA():
         fig.gca().add_artist(centre_circle)
         plt.show()
         return
+
+    def __ca_retention(self, f_last:str) -> pd.DataFrame:
+        f_last = CatalystAssessments(f_last)
+        f_this = self.__catalyst_assessments
+        retention = set(f_last.cas.index).intersection(set(f_this.cas.index))
+        return pd.concat([f_last.cas.loc[retention], 
+                          f_this.cas.loc[retention]], 
+                          axis='columns', keys=['FUND {}'.format(f.fund) for f in [f_last, f_this.fund]], 
+                          names=['Fund','CA info'])
 
     def __plot_budavail(self, df:pd.DataFrame, idx:str) -> None:
         df.sort_values(by=['Result'], ascending=False, inplace=True)
