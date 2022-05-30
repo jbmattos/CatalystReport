@@ -20,12 +20,11 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.pylab import rcParams
 
-from catalyst_fund_eda import CatalystFundEDA
-from data.datasets import available_data
+from catalyst_fund import CatalystFund
 
 class CatalystReport():
-    def __init__(self, funds:list=list(available_data().keys())) -> None:                                      # ['f\d']
-        self.__catalyst_f_eda = {f: CatalystFundEDA(f) for f in funds}      # {'f\d' : CatalystFundEDA}
+    def __init__(self) -> None:                                      # ['f\d']
+        # self.__catalyst_f_eda = {f: CatalystFund(f) for f in funds}      # {'f\d' : CatalystFundEDA}
         self.__df_evolution = self.__comput_evolution()
 
     @property

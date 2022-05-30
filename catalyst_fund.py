@@ -20,15 +20,15 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.pylab import rcParams
 
-from catalyst_votingresults import CatalystVotingResults
-from catalyst_assessments import CatalystAssessments
+from catalyst_data_votingresults import CatalystVotingResults
+from catalyst_data_assessments import CatalystAssessments
 
 warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
 warnings.simplefilter('ignore', category=UserWarning)
 
 ERR_STATS_FEAT = 'Unidentified statistical feature {}. Please, select one of the following options: {}'
 
-class CatalystFundEDA():
+class CatalystFund():
     def __init__(self, fund: str) -> None:
         self.__catalyst_results = CatalystVotingResults(fund)
         self.__catalyst_assessments = CatalystAssessments(fund)
