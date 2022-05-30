@@ -95,6 +95,9 @@ class CatalystFundEDA():
         else:
             print("!! No previous Fund to analyse retention.")
             return 
+    
+    def get_vca_retention(self) -> pd.DataFrame:
+        pass
 
     def plot_distribution(self, feat:str='SCORE') -> None:
         if feat in self.stats_feats:
@@ -292,8 +295,8 @@ class CatalystFundEDA():
         retention = set(f_last.cas.index).intersection(set(f_this.cas.index))
         return pd.concat([f_last.cas.loc[retention], 
                           f_this.cas.loc[retention]], 
-                          axis='columns', keys=['FUND {}'.format(f.fund) for f in [f_last, f_this.fund]], 
-                          names=['Fund','CA info'])
+                          axis='columns', keys=['FUND {}'.format(f.fund) for f in [f_last, f_this]], 
+                          names=['Fund','CA info']).sort_index()
 
     def __plot_budavail(self, df:pd.DataFrame, idx:str) -> None:
         df.sort_values(by=['Result'], ascending=False, inplace=True)
