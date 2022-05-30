@@ -39,8 +39,7 @@ def available_data() -> dict:
 ##################################################
 # GET ASSESSMENTS 
 #
-# Returns a dictionary of parameters to be used in the structure 
-# of CatalystAssessments.__get_assessments data
+#
 #
 # TEMPLATE:
 #
@@ -393,6 +392,14 @@ def get_cas_f6(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     # input NUMBER_ASSESSMENTS
     df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
 
+    # input ca's STATUS
+    counts = df_assess.groupby('CA')['QA_STATUS'].value_counts().unstack(fill_value=0)
+    excluded = counts.Excluded > 0.2* counts.sum(axis='columns')
+    df_ca['STATUS'] = excluded.map(lambda v: 'Excluded' if v else 'Included')
+
+    # input ca's status REASON
+    df_ca['REASON'] =  excluded.map(lambda v: '(Excluded) > 20% (Valid+Excluded)' if v else 'Included')
+
     return df_ca
 
 
@@ -404,6 +411,14 @@ def get_cas_f7(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     # input NUMBER_ASSESSMENTS
     df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
 
+    # input ca's STATUS
+    counts = df_assess.groupby('CA')['QA_STATUS'].value_counts().unstack(fill_value=0)
+    excluded = counts.Excluded > 0.2* counts.sum(axis='columns')
+    df_ca['STATUS'] = excluded.map(lambda v: 'Excluded' if v else 'Included')
+
+    # input ca's status REASON
+    df_ca['REASON'] =  excluded.map(lambda v: '(Excluded) > 20% (Valid+Excluded)' if v else 'Included')
+
     return df_ca
 
 
@@ -414,6 +429,14 @@ def get_cas_f8(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 
     # input NUMBER_ASSESSMENTS
     df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
+
+    # input ca's STATUS
+    counts = df_assess.groupby('CA')['QA_STATUS'].value_counts().unstack(fill_value=0)
+    excluded = counts.Excluded > 0.2* counts.sum(axis='columns')
+    df_ca['STATUS'] = excluded.map(lambda v: 'Excluded' if v else 'Included')
+
+    # input ca's status REASON
+    df_ca['REASON'] =  excluded.map(lambda v: '(Excluded) > 20% (Valid+Excluded)' if v else 'Included')
 
     return df_ca
 

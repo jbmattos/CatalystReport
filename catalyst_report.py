@@ -15,16 +15,10 @@ import numpy as np
 import pandas as pd
 
 # review
-import itertools
-import json
-import matplotlib.backends.backend_pdf
-import pathlib
 import seaborn as sns
 
 from matplotlib import pyplot as plt
-from matplotlib.gridspec import SubplotSpec
 from matplotlib.pylab import rcParams
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from catalyst_fund_eda import CatalystFundEDA
 from data.datasets import available_data
