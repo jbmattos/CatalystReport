@@ -1,12 +1,11 @@
 '''
 DATA LOADERS FOR VOTING-RESULTS DATA
 
-This file provides fund-specific functions to properly load `datafiles_votingresults` data
-into `catalyst_votingresults.CatalystVotingResults` objects.
+This file provides fund-specific functions to properly load `datafiles_assessments` data
+into `catalyst_data_assessments.CatalystAssessments` class format.
 
-For adding new Fund data to the repository, 
-follow the comments provided in this file
-to implement the necessary new-fund specific functions.
+For adding new Fund data to the repository:
+Follow the comments provided in this file to implement the necessary new-fund specific functions.
 '''
 
 import numpy as np
@@ -35,33 +34,39 @@ DEFAULT_AGG_TXT_FEAT = ['Impact / Alignment Note', 'Feasibility Note', 'Auditabi
 def available_data() -> dict:
     return FUNDS_FILES
 
-
 ##################################################
-# GET ASSESSMENTS 
+# FUNCTION GROUP: 
+#   GET ASSESSMENTS 
 #
-#
+# EXPLANATION:
+#   This group of functions returns the standardized Assessments table
+#   which contains all Fund's CAs' assessments and default features.
+# 
+# ADD FUND:
+#   To add new Fund, copy, paste and uncomment the following template.
+#   !! Important: 
+#       - The {N} in the function's name should be replaced with the int-referece to the new Fund
+#       - The code lines should be kept or similar formatting should be provided.
 #
 # TEMPLATE:
-#
-# ----------------------------------------
+#-----------------------------------------
 # def get_assessments_fN(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 #     '''
 #     This function receives a xlsx file containing all Fund's Assessments data
 #     and return a pd.DataFrame [assessments x DEFAULT_ASSESSMENTS_FEATS]
-
+#
 #     !!! It is important that the final dataframe contains all DEFAULT_ASSESSMENTS_FEATS
 #     '''
 #     # Setup the valid assessments dataframe
 #     df_valid = df_valid[DEFAULT_ASSESSMENTS_FEATS]
-
+#
 #     # Setup the excluded assessments dataframe
 #     df_exc = df_exc[DEFAULT_ASSESSMENTS_FEATS]
-
+#
 #     df_final = pd.concat([df_valid,df_exc], axis='index').reset_index(drop=True)
 #     if set(df_final.columns)==set(DEFAULT_ASSESSMENTS_FEATS): return df_final
-#     else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_fN', DEFAULT_ASSESSMENTS_FEATS))
+#     else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_fN', DEFAULT_ASSESSMENTS_FEATS)) # edit the function's name
 ##################################################
-
 
 def get_assessments_f3(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     '''
@@ -312,29 +317,35 @@ def get_assessments_f8(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 
 
 ##################################################
-# GET COMUNITY ADVISORS 
+# FUNCTION GROUP: 
+#   GET COMUNITY ADVISORS 
 #
-# Returns a dictionary of parameters to be used in the structure 
-# of CatalystAssessments.__get_comunity_advisors data
+# EXPLANATION:
+#   This group of functions returns the standardized CAs' table
+#   which contains information on all CA's that had participated on the Fund
+# 
+# ADD FUND:
+#   To add new Fund, copy, paste and uncomment the following template.
+#   !! Important: 
+#       - The {N} in the function's name should be replaced with the int-referece to the new Fund
+#       - The code lines should be kept or similar formatting should be provided.
 #
 # TEMPLATE:
-#
-# ----------------------------------------
+#-----------------------------------------
 # def get_cas_fN(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 #     # Build dataframe from Unique Assessments' CAs and Default Features
 #     df_ca = pd.DataFrame(index=df_assess.CA.unique(), columns=DEFAULT_CA_FEATS)
 #     df_ca.sort_index(inplace=True)
-
+#
 #     # input NUMBER_ASSESSMENTS
 #     df_ca['NUMBER_ASSESSMENTS'] = df_assess.CA.value_counts()
-
+#
 #     # input ca's STATUS
-
+#
 #     # input ca's status REASON
-
+#
 #     return df_ca
 ##################################################
-
 
 def get_cas_f3(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
     # Build dataframe from Unique Assessments' CAs and Default Features
@@ -443,27 +454,34 @@ def get_cas_f8(df_assess:pd.DataFrame, xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 
 
 ##################################################
-# GET VETERAN COMUNITY ADVISORS 
+# FUNCTION GROUP: 
+#   GET VETERAN COMUNITY ADVISORS  
 #
-# Returns a dictionary of parameters to be used in the structure 
-# of CatalystAssessments.__get_comunity_advisors data
+# EXPLANATION:
+#   This group of functions returns the standardized vCAs' table
+#   which contains information on all vCA's that had participated on the Fund
+# 
+# ADD FUND:
+#   To add new Fund, copy, paste and uncomment the following template.
+#   !! Important: 
+#       - The {N} in the function's name should be replaced with the int-referece to the new Fund
+#       - The code lines should be kept or similar formatting should be provided.
 #
 # TEMPLATE:
-#
-# ----------------------------------------
+#-----------------------------------------
 # def get_vcas_fN(xlsx_obj:pd.ExcelFile) -> pd.DataFrame:
 #     # Load vCAs information
 #     vcas = xlsx_obj.parse(sheet_name='')
-
+#
 #     # Input NAME feature
-
+#
 #     # Input NUMBER_REVIEWS feature 
-
+#
 #     # Input URL feature 
-
+#
 #     vcas = vcas[DEFAULT_VCA_FEATS]
 #     if set(vcas.columns)==set(DEFAULT_VCA_FEATS): return vcas
-#     else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_f8', DEFAULT_VCA_FEATS))
+#     else: raise TypeError(ERR_DEFAULT_FEAT.format('get_assessments_fN', DEFAULT_VCA_FEATS))   # edit the function's name
 ##################################################
 
 

@@ -1,15 +1,13 @@
 '''
 DATA LOADERS FOR VOTING-RESULTS DATA
 
-This file provides fund-specific functions to properly load `datafiles_votingresults` data
-into `catalyst_votingresults.CatalystVotingResults` objects.
+This file provides fund-specific functions to properly load `datafiles_votingresults` files
+into `catalyst_data_votingresults.CatalystVotingResults` class format.
 
-For adding new Fund data to the repository, 
-follow the comments provided in this file
-to implement the necessary new-fund specific functions.
+For adding new Fund data to the repository:
+Follow the comments provided in this file to implement the necessary new-fund specific functions.
 '''
 
-import numpy as np
 import pandas as pd
 import os
 
@@ -31,15 +29,22 @@ def available_data() -> dict:
 
 
 ##################################################
-# VALIDATION SETUP
+# FUNCTION GROUP: 
+#   VALIDATION SETUP
 #
-# explanation
+# EXPLANATION:
+#   This group of functions provide the necessary preprocessing 
+#   to load the CatalystVotingResults validation table. 
+# 
+# ADD FUND:
+#   To add new Fund, copy, paste and uncomment the following template.
+#   !! Important: 
+#       - The {N} in the function's name should be replaced with the int-referece to the new Fund
+#       - The code lines should be kept or similar formatting should be provided.
 #
 # TEMPLATE:
-#
-# ----------------------------------------
+#-----------------------------------------
 # def validation_setup_fN(df:pd.DataFrame) -> pd.DataFrame:
-#     df = data.validation
 #
 #     # Drop unecessary rows on Challenge's columns (NaN values will be handle by default)
 #     # (add optional code here)
@@ -53,6 +58,7 @@ def available_data() -> dict:
 #     # (add optional code here)
 #
 #     return df.copy()
+#-------------------------------------------
 ##################################################
 
 
@@ -101,23 +107,34 @@ def validation_setup_f8(df:pd.DataFrame) -> pd.DataFrame:
     
     return df.copy()
 
-# ----------------------------------------
-#    BUDGET SETUP
+
+##################################################
+# FUNCTION GROUP: 
+#   BUDGET SETUP
 #
-# explanation
-# return dict containing the parameters to default function
-#  TEMPLATE:
+# EXPLANATION:
+#   This group of functions return a dictionary containing the parameters
+#   to be used in the CatalystVotingResults.__pipeline processing method
+# 
+# ADD FUND:
+#   To add new Fund, copy, paste and uncomment the following template.
+#   !! Important: 
+#       - The {N} in the function's name should be replaced with the int-referece to the new Fund
+#       - The code lines should be kept or similar formatting should be provided.
 #
+# TEMPLATE:
+#-----------------------------------------
 # def input_budget_fN() -> dict:
-#     # In case of differences between the challenge's names in CatalystData.data.keys() and CatalystData.validation.columns
-#     # Provide a dictionary {CatalystData.data name : CatalystData.validation name}
+#     # In case of differences between the challenge's names in the xlsx sheets and validation table
+#     # Provide a dictionary {Sheet name : Validation name}
 #     replace_validation = {}
 #
-#     # In case of missing challenge budget, the value can be found on Catalyst website https://cardanocataly.st/voter-tool/#/
-#     # Provide a dictionary {CatalystData.data name : budget (int)}
+#     # In case of missing challenge budget on Validation table, the value can be found on Catalyst website https://cardanocataly.st/voter-tool/#/
+#     # Provide a dictionary {Challenge Sheet name : budget (int)}
 #     input_bud = {}  
-# return {'replace_validation':replace_validation, replav:input_bud}
+#     return {'replace_validation':replace_validation, 'input_bud':input_bud}
 # ----------------------------------------
+##################################################
 
 def get_budget_f3() -> dict:
     replace_validation = {}
@@ -198,17 +215,29 @@ def get_budget_f8() -> dict:
     return {'replace_validation':replace_validation, 'input_bud':input_bud}
 
 
-# ----------------------------------------
-#    CHALLENG DATA PROCESSING FUNCTIONS
+##################################################
+# FUNCTION GROUP: 
+#   CHALLENG DATA PROCESSING
 #
-# explanation
-# Additional __format functions are provided for further processing, if necessary
+# EXPLANATION:
+#   This group of functions return a dictionary containing the parameters
+#   to be used in the CatalystVotingResults.__challenge_data_processing() processing method,
+#   which generates the standardized dataframe containing the results of all Challenges
+# 
+# ADD FUND:
+#   To add new Fund, copy, paste and uncomment the following template.
+#   !! Important: 
+#       - The {N} in the function's name should be replaced with the int-referece to the new Fund
+#       - The code lines should be kept or similar formatting should be provided.
 #
-#  TEMPLATE:
-#
-# DEFAULT_COLS = ['challenge', 'Budget', 'Proposal', 'SCORE', 'YES', 'NO', 'Unique Yes', 'Unique No', 'Result','STATUS','REQUESTED $', 'REQUESTED %']
-# def __process_f4(data: CatalystData) -> CatalystData:
-#   # In case a DEFAULT_COLS has a different name from the ones defined in the global variable
+#   For futher information:
+#   DEFAULT_COLS = ['challenge', 'Budget', 'Proposal', 
+#                   'SCORE', 'YES', 'NO', 'Unique Yes', 
+#                   'Unique No', 'Result','STATUS','REQUESTED $','REQUESTED %']
+# TEMPLATE:
+#-----------------------------------------
+# def get_process_fN() -> dict:
+#   # In case a DEFAULT_COLS has a different name from the ones defined in the global variable (informed above)
 #   #    provide a dictionary {old_name : default_name} for renaming the pd.DataFrame columns 
 #     rename = {}
 #     return {'rename_default_cols':rename}
@@ -219,8 +248,6 @@ def get_process_f3() -> dict:
     return {'rename_default_cols':rename}
 
 def get_process_f4() -> dict:
-    # In case a DEFAULT_COLS has a different name from the ones defined in the global variable of fund_voting_results.py
-    #    provide a dictionary {old_name : default_name} for renaming the pd.DataFrame columns 
     rename = {
         'Overall score': 'SCORE'
     }
