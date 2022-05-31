@@ -22,7 +22,7 @@ from matplotlib.pylab import rcParams
 
 from catalyst_fund import CatalystFund
 
-class CatalystReport():
+class CatalystProjectReport():
     def __init__(self) -> None:                                      # ['f\d']
         # self.__catalyst_f_eda = {f: CatalystFund(f) for f in funds}      # {'f\d' : CatalystFundEDA}
         self.__df_evolution = self.__comput_evolution()

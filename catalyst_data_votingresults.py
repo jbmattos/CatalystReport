@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import warnings
 
-from data.loaders_votingresults import *
+from data.loaders_data_votingresults import *
 
 # MESSAGES      
 ERR_FNC_NOT_FOUND = "Error while loading {} results: {} processing.\nPlease, provide a proper < data.loader_votingresults.{}() > function for loading the expected results."

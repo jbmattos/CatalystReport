@@ -8,7 +8,7 @@ into properly adjusted data structure to data analysis.
 import numpy as np
 import pandas as pd
 
-from data.loaders_assessments import *
+from data.loaders_data_assessments import *
 
 # MESSAGES      
 ERR_FNC_NOT_FOUND = "Error while loading {} results: {} processing.\nPlease, provide a proper < data.loaders_assessments.{}() > function for loading the expected results."
