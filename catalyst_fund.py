@@ -562,15 +562,20 @@ class CatalystFund():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Catalyst Fund Analysis & Report')
-    parser.add_argument("--fund", required=True,
-                        choices=CatalystFund.AVAILABLE_FUNDS,
-                        type=str,
-                        help="Catalyst Fund to provide a report on.")
-    # parser.add_argument("--simple", action='store_true',
+    parser = argparse.ArgumentParser(description='Catalyst Fund Analysis & Report:\
+                                                  Generate data analysis report on specific Catalyst Funds')
+    parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    optional = parser.add_argument_group('optional arguments')               
+    required.add_argument("--fund", required=True,
+                                    choices=CatalystFund.AVAILABLE_FUNDS,
+                                    type=str,
+                                    help="Catalyst Fund to provide a report on.")
+    # optional.add_argument("--simple", action='store_true',
     #                     help="Generates only simple report")
-    # parser.add_argument("--notfig", action='store_false',
+    # optional.add_argument("--notfig", action='store_false',
     #                     help="Deactivates the Figures' report")
+    
     args = parser.parse_args()
 
     fund = CatalystFund(args.fund)
