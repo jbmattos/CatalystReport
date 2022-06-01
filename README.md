@@ -43,10 +43,18 @@ Usage information on the available properties and methods can be found in this [
 
 **To run an complete report on a specific Fund:**
 ```
-catalyst_fund.py usage
-(to be implemented)
+>>python catalyst_fund.py --h
+
+usage: catalyst_fund.py [-h] --fund {f3,f4,f5,f6,f7,f8}
+
+Catalyst Fund Analysis & Report: Generate data analysis report on specific Catalyst Funds
+
+required arguments:
+  --fund {f3,f4,f5,f6,f7,f8}
+                        Catalyst Fund to provide a report on.
+
 ```
-> Running the `catalyst_fund.py` automatically creates an `report_{fund}_{datestamp}/` folder containing several analysis files.
+> Running the `catalyst_fund.py` automatically creates an `report_CatalystFund-{fund}_{datestamp}/` folder containing several analysis files.
 
 #### 2. Catalyst Project Analysis ([CatalystProjectReport](https://github.com/jbmattos/CatalystReport/blob/main/catalyst_project_report.py))
 This class provides information, statistics and plot analysis related to all Funds of _Project Catalyst_. \
