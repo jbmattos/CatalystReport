@@ -529,8 +529,17 @@ class CatalystFund():
                 except OSError as exc: # Guard against race condition
                     if exc.errno != errno.EEXIST:
                         raise
-        
-        # README.md FILE
+            # README.md FILE
+            readme_path = fig_path+'README.md'
+            f = open(readme_path, 'w')
+            # head info
+            title = '\n\n# Catalyst Fund Image Reports'
+            explanation = '\nHere you will find compact reports in figure format, easy to share!'
+            f.write(title)
+            f.write(explanation)
+            f.close()
+
+        # REPORT-FOLDER README.md FILE
         readme_path = self.__report_path+'README.md'
         f = open(readme_path, 'w')
         # head info
