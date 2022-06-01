@@ -534,20 +534,20 @@ class CatalystFund():
         readme_path = self.__report_path+'README.md'
         f = open(readme_path, 'w')
         # head info
-        title = '# Catalyst Fund Report: FUND {}'.format(self.fund)
-        explanation = 'Find information and data analysis on Catalyt Fund {}'.format(self.fund[-1])
+        title = '\n\n# Catalyst Fund Report: FUND {}'.format(self.fund)
+        explanation = '\nFind information and data analysis on Catalyt Fund {}'.format(self.fund[-1])
         f.write(title)
         f.write(explanation)
         # files' info
         if simple_report:
-            f.write('# {}'.format(SIMPLE_REPORT_FILE))
-            f.write('Write here some explanation')
+            f.write('\n\n## {}'.format(SIMPLE_REPORT_FILE))
+            f.write('\nWrite here some explanation')
         if full_report:
-            f.write('# {}'.format(FULL_REPORT_FILE))
-            f.write('Write here some explanation')
+            f.write('\n\n## {}'.format(FULL_REPORT_FILE))
+            f.write('\nWrite here some explanation')
         if fig_folder:
-            f.write('# {}'.format(fig_folder_name))
-            f.write('Write here some explanation')
+            f.write('\n\n## {}'.format(fig_folder_name))
+            f.write('\nWrite here some explanation')
         f.close()
         return
 
