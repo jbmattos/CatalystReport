@@ -1,0 +1,1 @@
+# Catalyst Fund Report: FUND f8Find information and data analysis on Catalyt Fund 8# SIMPLE_REPORT_FILE.txtWrite here some explanation# FULL_REPORT_FILE.txtWrite here some explanation# figs/Write here some explanation

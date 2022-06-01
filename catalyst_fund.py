@@ -9,16 +9,15 @@ This file provides a CatalystResults class
 containing a collection data analysis methods.
 '''
 
-import re
-import numpy as np
-import pandas as pd
-import warnings
-
-# review
-import seaborn as sns
-
+import argparse
+import errno
+from datetime import date
 from matplotlib import pyplot as plt
 from matplotlib.pylab import rcParams
+import os
+import pandas as pd
+import seaborn as sns
+import warnings
 
 from catalyst_data_votingresults import CatalystVotingResults
 from catalyst_data_assessments import CatalystAssessments
@@ -26,9 +25,20 @@ from catalyst_data_assessments import CatalystAssessments
 warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
 warnings.simplefilter('ignore', category=UserWarning)
 
+# Class messages (error/warnings)
 ERR_STATS_FEAT = 'Unidentified statistical feature {}. Please, select one of the following options: {}'
 
+# Repository paths and files
+ROOT = 'CatalystReport'
+SIMPLE_REPORT_FILE = 'SIMPLE_REPORT_FILE.txt'
+FULL_REPORT_FILE = 'FULL_REPORT_FILE.txt'
+
 class CatalystFund():
+
+    AVAILABLE_FUNDS = list(set(CatalystAssessments.FUNDS_FILES.keys()).intersection(
+                            set(CatalystVotingResults.FUNDS_FILES.keys())))
+    AVAILABLE_FUNDS.sort()
+
     def __init__(self, fund: str) -> None:
         self.__catalyst_results = CatalystVotingResults(fund)
         self.__catalyst_assessments = CatalystAssessments(fund)
@@ -37,6 +47,7 @@ class CatalystFund():
         self.__palette_status = {"FUNDED": '#0570b0', # blue
                                  "NOT FUNDED": '#ec7014', # orange
                                  "NOT APPROVED": '#cb181d'} # red
+        self.__report_path = os.path.dirname(__file__).split(ROOT)[0]+ROOT+'/report_CatalystFund-{}_{}/'.format(fund, date.today().strftime('%Y%m%d'))
     
     @property
     def fund(self) -> str:
@@ -57,7 +68,9 @@ class CatalystFund():
     def stats_feats(self) -> list:
         return list(set(self.__default_stats_feats).intersection(set(self.results.columns)))
         
-    def fund_report(self) -> None:
+    def report(self, simple_report:bool=True, 
+                     full_report:bool=True, 
+                     fig_report:bool=True) -> None:
         '''
         Generate a fund report:
         
@@ -70,7 +83,10 @@ class CatalystFund():
         > Plots information
             
         '''
-        pass
+        self.__create_report_folder(simple_report=simple_report,
+                                    full_report=full_report,
+                                    fig_folder=fig_report)
+        return
 
     def get_challenge_results(self, challenge:str) -> pd.DataFrame:
         return self.__catalyst_results.get_challenge_results(challenge)
@@ -491,8 +507,64 @@ class CatalystFund():
         df_stats = pd.concat(new_dfs, axis='columns', keys=feats)
         return df_stats
     
+    def __create_report_folder(self, simple_report:bool, 
+                                     full_report:bool, 
+                                     fig_folder:bool) -> None:
 
+        # REPORT FOLDER
+        if not os.path.exists(os.path.dirname(self.__report_path)):
+            try:
+                os.makedirs(os.path.dirname(self.__report_path))
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+        
+        # FIGURES SUBFOLDER
+        if fig_folder:
+            fig_folder_name = 'figs/'
+            fig_path = self.__report_path+fig_folder_name
+            if not os.path.exists(os.path.dirname(fig_path)):
+                try:
+                    os.makedirs(os.path.dirname(fig_path))
+                except OSError as exc: # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+        
+        # README.md FILE
+        readme_path = self.__report_path+'README.md'
+        f = open(readme_path, 'w')
+        # head info
+        title = '# Catalyst Fund Report: FUND {}'.format(self.fund)
+        explanation = 'Find information and data analysis on Catalyt Fund {}'.format(self.fund[-1])
+        f.write(title)
+        f.write(explanation)
+        # files' info
+        if simple_report:
+            f.write('# {}'.format(SIMPLE_REPORT_FILE))
+            f.write('Write here some explanation')
+        if full_report:
+            f.write('# {}'.format(FULL_REPORT_FILE))
+            f.write('Write here some explanation')
+        if fig_folder:
+            f.write('# {}'.format(fig_folder_name))
+            f.write('Write here some explanation')
+        f.close()
+        return
 
 
 if __name__ == "__main__":
-    pass
+    parser = argparse.ArgumentParser(description='Catalyst Fund Analysis & Report')
+    parser.add_argument("--fund", required=True,
+                        choices=CatalystFund.AVAILABLE_FUNDS,
+                        type=str,
+                        help="Catalyst Fund to provide a report on.")
+    # parser.add_argument("--simple", action='store_true',
+    #                     help="Generates only simple report")
+    # parser.add_argument("--notfig", action='store_false',
+    #                     help="Deactivates the Figures' report")
+    args = parser.parse_args()
+
+    fund = CatalystFund(args.fund)
+    fund.report(simple_report=True, 
+                full_report=True, 
+                fig_report=True)
