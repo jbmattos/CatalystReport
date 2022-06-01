@@ -62,7 +62,11 @@ Usage information on the available properties and methods can be found in this [
 
 **To run an complete report on a specific Fund:**
 ```
-catalyst_project_report.py usage
-(to be implemented)
+>>python catalyst_project_report.py --h
+
+usage: catalyst_project_report.py [-h]
+
+Project Catalyst Analysis & Report: Generate data analysis report on all Catalyst Funds
+
 ```
-> Running the `catalyst_project_report.py` automatically creates an `report_projectCatalyst_{datestamp}/` folder containing several analysis files.
+> Running the `catalyst_project_report.py` automatically creates an `report_ProjectCatalyst_{datestamp}/` folder containing several analysis files.
